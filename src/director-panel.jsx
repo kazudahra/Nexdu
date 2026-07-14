@@ -7,6 +7,7 @@ import {
   ArrowRightLeft, ClipboardList, Star, BookOpen, Timer, ShieldCheck,
   Pencil, Sun, Moon, Palette, CreditCard, Banknote, AlertTriangle, Percent,
 } from 'lucide-react';
+import { loadSession, loadSharedState, saveSession, saveSharedState } from './lib/app-storage';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
 
 /* ============================== CONSTANTS ============================== */
@@ -1602,28 +1603,15 @@ export default function App() {
   const [notifLog, setNotifLog] = useState([]);
   const [overdueChecked, setOverdueChecked] = useState(false);
 
-  const hasStorage = typeof window !== 'undefined' && !!window.storage;
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (hasStorage) {
-        try {
-          const res = await window.storage.get(DIRECTOR_DATA_KEY, true).catch(() => null);
-          if (!cancelled) setDirectorData(res && res.value ? JSON.parse(res.value) : seedDirectorData());
-        } catch (e) { if (!cancelled) setDirectorData(seedDirectorData()); }
-        try {
-          const opRes = await window.storage.get(TEACHER_APP_KEY, true).catch(() => null);
-          if (!cancelled) setOpData(opRes && opRes.value ? JSON.parse(opRes.value) : { groups: [], students: [], tasks: [] });
-        } catch (e) { if (!cancelled) setOpData({ groups: [], students: [], tasks: [] }); }
-        try {
-          const sessRes = await window.storage.get(DIRECTOR_SESSION_KEY, false).catch(() => null);
-          if (!cancelled) setSession(sessRes && sessRes.value ? JSON.parse(sessRes.value) : null);
-        } catch (e) { if (!cancelled) setSession(null); }
-      } else if (!cancelled) {
-        setDirectorData(seedDirectorData());
-        setOpData({ groups: [], students: [], tasks: [] });
-        setSession(null);
+      const savedDirectorData = await loadSharedState(DIRECTOR_DATA_KEY);
+      const savedTeacherData = await loadSharedState(TEACHER_APP_KEY);
+      if (!cancelled) {
+        setDirectorData(savedDirectorData || seedDirectorData());
+        setOpData(savedTeacherData || { groups: [], students: [], tasks: [] });
+        setSession(loadSession(DIRECTOR_SESSION_KEY));
       }
       if (!cancelled) setLoading(false);
     })();
@@ -1633,8 +1621,7 @@ export default function App() {
   useEffect(() => {
     if (loading || !directorData) return;
     const t = setTimeout(async () => {
-      if (!hasStorage) return;
-      try { await window.storage.set(DIRECTOR_DATA_KEY, JSON.stringify(directorData), true); }
+      try { await saveSharedState(DIRECTOR_DATA_KEY, directorData); }
       catch (e) { console.error('Saqlashda xatolik:', e); }
     }, 700);
     return () => clearTimeout(t);
@@ -1642,14 +1629,26 @@ export default function App() {
 
   useEffect(() => {
     if (loading) return;
-    (async () => {
-      if (!hasStorage) return;
-      try {
-        if (session) await window.storage.set(DIRECTOR_SESSION_KEY, JSON.stringify(session), false);
-        else await window.storage.delete(DIRECTOR_SESSION_KEY, false);
-      } catch (e) { /* ignore */ }
-    })();
+    saveSession(DIRECTOR_SESSION_KEY, session);
   }, [session, loading]);
+
+  useEffect(() => {
+    if (loading) return;
+    let cancelled = false;
+
+    async function refreshTeacherData() {
+      const savedTeacherData = await loadSharedState(TEACHER_APP_KEY);
+      if (!cancelled && savedTeacherData) setOpData(savedTeacherData);
+    }
+
+    const intervalId = window.setInterval(refreshTeacherData, 5000);
+    window.addEventListener('focus', refreshTeacherData);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshTeacherData);
+    };
+  }, [loading]);
 
   function addNotification(message) {
     const id = generateId('n');

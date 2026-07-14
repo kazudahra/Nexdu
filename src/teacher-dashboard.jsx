@@ -5,6 +5,7 @@ import {
   Loader2, Camera, Lock, UserPlus, Sparkles, CalendarClock, ArrowLeft,
   Home, LogOut, Phone, LogIn,
 } from 'lucide-react';
+import { loadSession, loadSharedState, saveSession, saveSharedState } from './lib/app-storage';
 
 /* ============================== CONSTANTS ============================== */
 
@@ -2083,35 +2084,19 @@ export default function App() {
   const [courses, setCourses] = useState([]); // read-only course catalog from the Director panel, if any
   const [canCreateGroups, setCanCreateGroups] = useState(true); // permission set by Director/Manager, if linked
 
-  const hasStorage = typeof window !== 'undefined' && !!window.storage;
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (hasStorage) {
-        let myPhone = '';
-        try {
-          const dataRes = await window.storage.get(APP_DATA_KEY, true).catch(() => null);
-          const parsed = dataRes && dataRes.value ? JSON.parse(dataRes.value) : seedData();
-          myPhone = normalizePhone(parsed?.teacher?.phone);
-          if (!cancelled) setAppData(parsed);
-        } catch (e) { if (!cancelled) setAppData(seedData()); }
-        try {
-          const sessRes = await window.storage.get(SESSION_KEY, false).catch(() => null);
-          if (!cancelled) setSession(sessRes && sessRes.value ? JSON.parse(sessRes.value) : null);
-        } catch (e) { if (!cancelled) setSession(null); }
-        try {
-          const dirRes = await window.storage.get(DIRECTOR_DATA_KEY, true).catch(() => null);
-          const dirParsed = dirRes && dirRes.value ? JSON.parse(dirRes.value) : null;
-          if (!cancelled) setCourses(dirParsed?.courses || []);
-          if (!cancelled && dirParsed?.teachersHR?.length && myPhone) {
-            const hrMatch = dirParsed.teachersHR.find(t => normalizePhone(t.phone) === myPhone);
-            if (hrMatch && hrMatch.canCreateGroups === false) setCanCreateGroups(false);
-          }
-        } catch (e) { if (!cancelled) setCourses([]); }
-      } else if (!cancelled) {
-        setAppData(seedData());
-        setSession(null);
+      const parsed = await loadSharedState(APP_DATA_KEY) || seedData();
+      const dirParsed = await loadSharedState(DIRECTOR_DATA_KEY);
+      const myPhone = normalizePhone(parsed?.teacher?.phone);
+      const hrMatch = (dirParsed?.teachersHR || []).find(t => normalizePhone(t.phone) === myPhone);
+
+      if (!cancelled) {
+        setAppData(parsed);
+        setSession(loadSession(SESSION_KEY));
+        setCourses(dirParsed?.courses || []);
+        setCanCreateGroups(hrMatch?.canCreateGroups !== false);
       }
       if (!cancelled) setLoading(false);
     })();
@@ -2121,8 +2106,7 @@ export default function App() {
   useEffect(() => {
     if (loading || !appData) return;
     const t = setTimeout(async () => {
-      if (!hasStorage) return;
-      try { await window.storage.set(APP_DATA_KEY, JSON.stringify(sanitizeForStorage(appData)), true); }
+      try { await saveSharedState(APP_DATA_KEY, sanitizeForStorage(appData)); }
       catch (e) { console.error('Saqlashda xatolik:', e); }
     }, 700);
     return () => clearTimeout(t);
@@ -2130,14 +2114,30 @@ export default function App() {
 
   useEffect(() => {
     if (loading) return;
-    (async () => {
-      if (!hasStorage) return;
-      try {
-        if (session) await window.storage.set(SESSION_KEY, JSON.stringify(session), false);
-        else await window.storage.delete(SESSION_KEY, false);
-      } catch (e) { /* ignore */ }
-    })();
+    saveSession(SESSION_KEY, session);
   }, [session, loading]);
+
+  useEffect(() => {
+    if (loading || !appData) return;
+    let cancelled = false;
+
+    async function refreshDirectorData() {
+      const dirParsed = await loadSharedState(DIRECTOR_DATA_KEY);
+      if (cancelled || !dirParsed) return;
+      const myPhone = normalizePhone(appData.teacher?.phone);
+      const hrMatch = (dirParsed.teachersHR || []).find(t => normalizePhone(t.phone) === myPhone);
+      setCourses(dirParsed.courses || []);
+      setCanCreateGroups(hrMatch?.canCreateGroups !== false);
+    }
+
+    const intervalId = window.setInterval(refreshDirectorData, 10000);
+    window.addEventListener('focus', refreshDirectorData);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshDirectorData);
+    };
+  }, [loading, appData?.teacher?.phone]);
 
   function addNotification(message) {
     const id = generateId('n');
