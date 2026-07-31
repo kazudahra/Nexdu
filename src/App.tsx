@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 
-// Rasmdagi fayllarga qarab faqat toza nomlar import qilindi:
-import Director from "./director";
-import Manager from "./manager";
-import Student from "./student";
-import Teacher from "./teacher";
+// Vercel qiynalmasligi uchun .jsx kengaytmalari aniq yozildi
+import Director from "./director.jsx";
+import Manager from "./manager.jsx";
+import Student from "./student.jsx";
+import Teacher from "./teacher.jsx";
 
 function App() {
   const [path, setPath] = useState(window.location.pathname);
