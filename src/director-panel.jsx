@@ -4,10 +4,9 @@ import {
   Eye, EyeOff, Bell, Loader2, Sparkles, Home,
   LogOut, LogIn, Building2, GraduationCap, PartyPopper, Wallet,
   Settings, TrendingUp, TrendingDown, CheckCircle2, XCircle,
-  ArrowRightLeft, ClipboardList, Star, BookOpen, Timer, ShieldCheck,
+  ClipboardList, Star, BookOpen, Timer, ShieldCheck,
   Pencil, Sun, Moon, Palette, CreditCard, Banknote, AlertTriangle, Percent,
 } from 'lucide-react';
-import { loadSession, loadSharedState, saveSession, saveSharedState } from './lib/app-storage';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
 
 /* ============================== CONSTANTS ============================== */
@@ -19,9 +18,7 @@ const JS_DAY_NAMES = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Paysha
 const TEACHER_APP_KEY = 'school-app-data-v3';
 const DIRECTOR_DATA_KEY = 'director-data-v2';
 const DIRECTOR_SESSION_KEY = 'director-session-v2';
-
-const DEMO_DIRECTOR_HASH = 'c837bd58a08f8ada06fb65e588af776b332e580dec1d042d75f32a6c89367297';
-const DEMO_MANAGER_HASH = '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4'; // "1234"
+const DIRECTOR_NOTIF_KEY = 'director-notif-log-v1';
 
 const DIRECTOR_ONLY_NAV = [
   { id: 'home', label: 'Bosh sahifa', icon: Home },
@@ -42,20 +39,24 @@ const MANAGER_NAV_ALL = [
 const DIRECTOR_NAV = [
   ...DIRECTOR_ONLY_NAV,
   ...MANAGER_NAV_ALL.filter(p => p.id !== 'home'),
+  { id: 'notifications', label: 'Bildirishnomalar', icon: Bell },
   { id: 'settings', label: 'Sozlamalar', icon: Settings },
 ];
 
 const EXPENSE_CATEGORIES = ['Ijara', 'Ish haqi', 'Kommunal', 'Reklama', 'Jihoz', "O'quv materiali", 'Boshqa'];
 const PAYMENT_METHODS = [{ id: 'cash', label: 'Naqd', icon: Banknote }, { id: 'card', label: 'Plastik', icon: CreditCard }];
+const GROUP_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
+function nextGroupColor(groups) { return GROUP_COLORS[groups.length % GROUP_COLORS.length]; }
 
 /* ============================== THEME ============================== */
 
 const THEMES = {
-  violet: { id: 'violet', name: 'Binafsha', bg: 'linear-gradient(160deg, #1e1b4b 0%, #4c1d95 35%, #7e22ce 55%, #831843 75%, #1e1b4b 100%)', accent1: '#c026d3', accent2: '#8b5cf6', blob1: '#8b5cf6', blob2: '#ec4899', blob3: '#0ea5e9' },
-  ocean: { id: 'ocean', name: 'Okean', bg: 'linear-gradient(160deg, #082f49 0%, #075985 35%, #0e7490 55%, #164e63 75%, #082f49 100%)', accent1: '#22d3ee', accent2: '#10b981', blob1: '#22d3ee', blob2: '#10b981', blob3: '#0ea5e9' },
-  sunset: { id: 'sunset', name: "Quyosh botishi", bg: 'linear-gradient(160deg, #431407 0%, #9a3412 35%, #c2410c 55%, #7c2d12 75%, #431407 100%)', accent1: '#fb923c', accent2: '#f43f5e', blob1: '#fb923c', blob2: '#f43f5e', blob3: '#f59e0b' },
-  day: { id: 'day', name: 'Kunduzgi (och ko\'k)', bg: 'linear-gradient(160deg, #3b5faa 0%, #5b7fc7 45%, #7fa0d8 100%)', accent1: '#1e3a8a', accent2: '#1d4ed8', blob1: '#93c5fd', blob2: '#bfdbfe', blob3: '#60a5fa' },
-  night: { id: 'night', name: "Tungi (to'q ko'k)", bg: 'linear-gradient(160deg, #020617 0%, #0b1120 45%, #0f172a 100%)', accent1: '#1e40af', accent2: '#1e3a8a', blob1: '#1e3a8a', blob2: '#172554', blob3: '#1e3a8a' },
+  cosmos: { id: 'cosmos', name: 'Cosmos', bg: '#0A1454', accent1: '#1B3BFF', accent2: '#4F73FF', blob1: '#1B3BFF', blob2: '#4F73FF', blob3: '#0A1454' },
+  violet: { id: 'violet', name: 'Binafsha', bg: '#2e1065', accent1: '#c026d3', accent2: '#8b5cf6', blob1: '#8b5cf6', blob2: '#ec4899', blob3: '#0ea5e9' },
+  ocean: { id: 'ocean', name: 'Okean', bg: '#0c4a6e', accent1: '#22d3ee', accent2: '#10b981', blob1: '#22d3ee', blob2: '#10b981', blob3: '#0ea5e9' },
+  sunset: { id: 'sunset', name: "Quyosh botishi", bg: '#7c2d12', accent1: '#fb923c', accent2: '#f43f5e', blob1: '#fb923c', blob2: '#f43f5e', blob3: '#f59e0b' },
+  day: { id: 'day', name: 'Kunduzgi (och ko\'k)', bg: '#5b7fc7', accent1: '#1e3a8a', accent2: '#1d4ed8', blob1: '#93c5fd', blob2: '#bfdbfe', blob3: '#60a5fa' },
+  night: { id: 'night', name: "Tungi (to'q ko'k)", bg: '#0b1120', accent1: '#1e40af', accent2: '#1e3a8a', blob1: '#1e3a8a', blob2: '#172554', blob3: '#1e3a8a' },
 };
 
 function clamp255(n) { return Math.max(0, Math.min(255, Math.round(n))); }
@@ -65,7 +66,7 @@ function toRgbStr(r, g, b, amt) { return `rgb(${clamp255(r * amt)}, ${clamp255(g
 function buildCustomTheme(r, g, b) {
   return {
     id: 'custom', name: 'Brend ranglar',
-    bg: `linear-gradient(160deg, ${toRgbStr(r, g, b, 0.22)} 0%, ${toRgbStr(r, g, b, 0.5)} 35%, ${toRgbStr(r, g, b, 0.72)} 55%, ${toRgbStr(r, g, b, 0.42)} 75%, ${toRgbStr(r, g, b, 0.22)} 100%)`,
+    bg: toRgbStr(r * 0.32, g * 0.32, b * 0.32, 1),
     accent1: toHex(r, g, b), accent2: toHex(r * 0.8 + 40, g * 0.8 + 15, b * 0.8 + 60),
     blob1: toHex(r, g, b), blob2: toHex(r * 0.7 + 60, g * 0.9, b * 1.1), blob3: toHex(r * 1.1, g * 0.9 + 20, b * 0.7),
   };
@@ -93,7 +94,7 @@ function extractAverageColor(dataUrl) {
   });
 }
 
-const ThemeContext = createContext(THEMES.violet);
+const ThemeContext = createContext(THEMES.cosmos);
 function useTheme() { return useContext(ThemeContext); }
 
 /* ============================== STYLE TOKENS ============================== */
@@ -108,7 +109,7 @@ const BTN_ICON = "w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border
 
 function PrimaryButton({ children, className = '', ...props }) {
   const theme = useTheme();
-  return <button {...props} className={`${BTN_PRIMARY_BASE} ${className}`} style={{ background: `linear-gradient(to right, ${theme.accent1}cc, ${theme.accent2}cc)` }}>{children}</button>;
+  return <button {...props} className={`${BTN_PRIMARY_BASE} ${className}`} style={{ background: theme.accent1 }}>{children}</button>;
 }
 
 /* ============================== UTILITIES ============================== */
@@ -136,11 +137,11 @@ function timeAgo(ts) {
   return `${Math.floor(diff / 86400)} kun oldin`;
 }
 
-function getPaymentTotal(payments, studentId, courseId, month) {
-  return payments.filter(p => p.studentId === studentId && p.courseId === courseId && p.month === month).reduce((s, p) => s + p.amount, 0);
+function getPaymentTotal(payments, studentId, groupId, month) {
+  return payments.filter(p => p.studentId === studentId && p.groupId === groupId && p.month === month).reduce((s, p) => s + p.amount, 0);
 }
-function getPaymentStatus(payments, studentId, courseId, month, price) {
-  const total = getPaymentTotal(payments, studentId, courseId, month);
+function getPaymentStatus(payments, studentId, groupId, month, price) {
+  const total = getPaymentTotal(payments, studentId, groupId, month);
   if (total <= 0) return 'unpaid';
   if (total < price) return 'partial';
   return 'paid';
@@ -188,36 +189,15 @@ function compressImageDataUrl(dataUrl, maxWidth) {
 /* ============================== SEED DATA ============================== */
 
 function seedDirectorData() {
-  const now = Date.now();
   return {
-    directors: [
-      { id: 'dir-1', name: 'Direktor Aliyev', phone: '901234000', passwordHash: DEMO_DIRECTOR_HASH, centerName: "Najot Ta'lim - Demo", logo: null, address: 'Toshkent sh., Chilonzor', themeId: 'violet', customTheme: null, twoFactorEnabled: false },
-    ],
-    branches: [
-      { id: 'br-1', directorId: 'dir-1', name: 'Markaziy filial', address: 'Toshkent sh., Chilonzor', color: '#8b5cf6' },
-    ],
-    managers: [
-      { id: 'mgr-1', branchIds: ['br-1'], name: 'Kamola Rahimova', phone: '901234100', birthDate: '1996-04-12', address: 'Toshkent sh.', passwordHash: DEMO_MANAGER_HASH, monthlySalary: 3000000, rating: 4, allowedPages: MANAGER_NAV_ALL.map(p => p.id) },
-    ],
-    teachersHR: [
-      { id: 'thr-1', branchId: 'br-1', name: 'Ustoz', phone: '901234500', revenueSharePercent: 40, rating: 4, note: '', canCreateGroups: true, canReceivePayments: true },
-    ],
-    holidays: [
-      { id: 'hol-1', directorId: 'dir-1', name: "Mustaqillik kuni", date: '2026-09-01', note: '' },
-    ],
-    finance: [
-      { id: 'fin-2', branchId: 'br-1', type: 'expense', amount: 1500000, category: 'Ijara', note: 'Iyul oyi ijarasi', date: todayISO(), status: 'approved', approvalMode: 'director', createdAt: now - 80000000 },
-      { id: 'fin-3', branchId: 'br-1', type: 'expense', amount: 350000, category: 'Jihoz', note: 'Proyektor lampasi', date: todayISO(), status: 'pending', approvalMode: 'director', createdAt: now - 3600000 },
-    ],
-    courses: [
-      { id: 'crs-1', branchId: 'br-1', name: 'Matematika', days: ['Dushanba', 'Chorshanba', 'Juma'], time: '15:00', price: 450000, durationMonths: 6, capacity: 12 },
-      { id: 'crs-2', branchId: 'br-1', name: 'Ingliz tili', days: ['Seshanba', 'Payshanba'], time: '17:00', price: 500000, durationMonths: 9, capacity: null },
-    ],
-    payments: [
-      { id: 'pay-1', studentId: 'st-1', courseId: 'crs-1', amount: 450000, method: 'cash', date: todayISO(), month: thisMonthKey(), createdAt: now - 80000000 },
-      { id: 'pay-2', studentId: 'st-2', courseId: 'crs-1', amount: 200000, method: 'card', date: todayISO(), month: thisMonthKey(), createdAt: now - 40000000 },
-    ],
-    groupFees: {},
+    directors: [],
+    branches: [],
+    managers: [],
+    teachersHR: [],
+    holidays: [],
+    finance: [],
+    courses: [],
+    payments: [],
   };
 }
 
@@ -263,7 +243,7 @@ function Avatar({ name, color = '#8b5cf6', size = 40, photo, onClick }) {
   const style = { width: size, height: size, minWidth: size };
   if (photo) return <img src={photo} alt={name} style={style} onClick={onClick} className={`rounded-full object-cover border-2 border-white/30 ${onClick ? 'cursor-pointer' : ''}`} />;
   return (
-    <div style={{ ...style, background: `linear-gradient(135deg, ${color}, ${color}99)`, fontSize: size * 0.38 }} onClick={onClick} className={`font-display rounded-full flex items-center justify-center font-bold text-white border-2 border-white/30 shrink-0 ${onClick ? 'cursor-pointer' : ''}`}>
+    <div style={{ ...style, background: color, fontSize: size * 0.38 }} onClick={onClick} className={`font-display rounded-full flex items-center justify-center font-bold text-white border-2 border-white/30 shrink-0 ${onClick ? 'cursor-pointer' : ''}`}>
       {initials(name)}
     </div>
   );
@@ -286,7 +266,7 @@ function PhoneInput({ value, onChange, autoFocus, onKeyDown }) {
 function Modal({ title, onClose, children, wide }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-5 sm:p-6 w-full ${wide ? 'max-w-2xl' : 'max-w-md'} max-h-[85vh] overflow-y-auto`} style={{ background: 'linear-gradient(160deg, rgba(20,20,40,0.9), rgba(30,20,50,0.85))' }}>
+      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-5 sm:p-6 w-full ${wide ? 'max-w-2xl' : 'max-w-md'} max-h-[85vh] overflow-y-auto`} style={{ background: 'rgba(10,20,60,0.92)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-lg font-semibold text-white">{title}</h3>
           <button onClick={onClose} className={BTN_ICON}><X size={18} /></button>
@@ -300,7 +280,7 @@ function Modal({ title, onClose, children, wide }) {
 function ConfirmModal({ message, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onCancel}>
-      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-6 w-full max-w-sm`} style={{ background: 'linear-gradient(160deg, rgba(20,20,40,0.95), rgba(30,20,50,0.9))' }}>
+      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-6 w-full max-w-sm`} style={{ background: 'rgba(10,20,60,0.95)' }}>
         <p className="text-white mb-5">{message}</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className={`${BTN_GHOST} flex-1`}>Yo'q, bekor</button>
@@ -317,7 +297,7 @@ function ToastStack({ toasts, onDismiss }) {
   return (
     <div className="fixed top-4 right-4 left-4 sm:left-auto z-[70] flex flex-col gap-2 sm:w-96">
       {toasts.map(n => (
-        <div key={n.id} className={`${GLASS} rounded-2xl p-3.5 flex items-start gap-3`} style={{ background: `linear-gradient(135deg, ${theme.accent1}e6, ${theme.accent2}cc)`, animation: 'fadeIn 0.3s ease' }}>
+        <div key={n.id} className={`${GLASS} rounded-2xl p-3.5 flex items-start gap-3`} style={{ background: `${theme.accent1}e6`, animation: 'fadeIn 0.3s ease' }}>
           <Bell size={18} className="text-white shrink-0 mt-0.5" />
           <p className="text-white text-sm flex-1">{n.message}</p>
           <button onClick={() => onDismiss(n.id)} className="text-white/70 hover:text-white shrink-0"><X size={16} /></button>
@@ -368,7 +348,7 @@ function ToggleSwitch({ checked, onChange, label, sub }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div><p className="text-white text-sm">{label}</p>{sub && <p className="text-white/40 text-xs">{sub}</p>}</div>
-      <button onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-all relative shrink-0 ${checked ? '' : 'bg-white/10 border border-white/20'}`} style={checked ? { background: `linear-gradient(to right, ${theme.accent1}, ${theme.accent2})` } : {}}>
+      <button onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-all relative shrink-0 ${checked ? '' : 'bg-white/10 border border-white/20'}`} style={checked ? { background: theme.accent1 } : {}}>
         <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${checked ? 'left-6' : 'left-1'}`} />
       </button>
     </div>
@@ -389,7 +369,7 @@ function ThemeSwitcher({ director, updateDirector }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`${GLASS} rounded-2xl p-2 absolute left-0 top-11 z-50 w-48`} style={{ background: 'linear-gradient(160deg, rgba(20,20,40,0.97), rgba(30,20,50,0.95))' }}>
+          <div className={`${GLASS} rounded-2xl p-2 absolute left-0 top-11 z-50 w-48`} style={{ background: 'rgba(10,20,60,0.97)' }}>
             {allThemes.map(t => (
               <button key={t.id} onClick={() => { updateDirector({ ...director, themeId: t.id }); setOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${theme.id === t.id ? 'bg-white/20 text-white' : 'text-white/70 hover:bg-white/10'}`}>
                 <span className="w-4 h-4 rounded-full shrink-0" style={{ background: t.bg }} />{t.name}
@@ -416,7 +396,7 @@ function NotificationBell({ log, onClear }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`${GLASS} rounded-2xl p-2 absolute right-0 top-11 z-50 w-72 max-h-80 overflow-y-auto`} style={{ background: 'linear-gradient(160deg, rgba(20,20,40,0.97), rgba(30,20,50,0.95))' }}>
+          <div className={`${GLASS} rounded-2xl p-2 absolute right-0 top-11 z-50 w-72 max-h-80 overflow-y-auto`} style={{ background: 'rgba(10,20,60,0.97)' }}>
             <div className="flex items-center justify-between px-2 py-1.5">
               <p className="text-white text-xs font-medium">Bildirishnomalar</p>
               {log.length > 0 && <button onClick={onClear} className="text-white/40 hover:text-white text-[11px]">Tozalash</button>}
@@ -439,6 +419,7 @@ function NotificationBell({ log, onClear }) {
 function opActiveStudents(opData) { return (opData?.students || []).filter(s => (s.groupIds || []).length > 0).length; }
 function opFrozenStudents(opData) { return (opData?.students || []).filter(s => (s.groupIds || []).length === 0).length; }
 function opGroups(opData) { return opData?.groups || []; }
+function opRooms(opData) { return opData?.rooms || []; }
 function opGroupStudentCount(opData, groupId) { return (opData?.students || []).filter(s => (s.groupIds || []).includes(groupId)).length; }
 function opStudentsInGroups(opData, groupIds) { return (opData?.students || []).filter(s => (s.groupIds || []).some(id => groupIds.includes(id))); }
 
@@ -454,11 +435,7 @@ function computeBranchStats(branch, directorData, opData) {
   const inThisMonth = f => new Date(f.date).getMonth() === thisMonth && new Date(f.date).getFullYear() === thisYear;
   const collected = branchFinance.filter(f => f.type === 'income' && f.status === 'approved' && inThisMonth(f)).reduce((s, f) => s + f.amount, 0);
   const expenses = branchFinance.filter(f => f.type === 'expense' && f.status === 'approved' && inThisMonth(f)).reduce((s, f) => s + f.amount, 0);
-  const expectedRevenue = courses.reduce((sum, c) => {
-    const cGroups = opGroups(opData).filter(g => g.courseId === c.id);
-    const ids = new Set(); cGroups.forEach(g => opStudentsInGroups(opData, [g.id]).forEach(s => ids.add(s.id)));
-    return sum + c.price * ids.size;
-  }, 0);
+  const expectedRevenue = groups.reduce((sum, g) => sum + (g.price || 0) * opGroupStudentCount(opData, g.id), 0);
   return { collected, expenses, netProfit: collected - expenses, expectedRevenue, activeStudents, teacherCount, courseCount: courses.length, groupCount: groups.length };
 }
 
@@ -486,9 +463,8 @@ function TwoFactorStep({ demoCode, onVerify, onBack, onResend }) {
   );
 }
 
-function DirectorAuth({ directorData, onLoginDirector, onLoginManager, onRegister }) {
+function DirectorAuth({ directorData, onLoginDirector, onRegister }) {
   const [mode, setMode] = useState('login');
-  const [roleTab, setRoleTab] = useState('director');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -507,17 +483,11 @@ function DirectorAuth({ directorData, onLoginDirector, onLoginManager, onRegiste
     setError(''); setBusy(true);
     const hash = await hashPassword(password);
     const normalized = normalizePhone(phone);
-    if (roleTab === 'director') {
-      const dir = directorData.directors.find(d => normalizePhone(d.phone) === normalized && d.passwordHash === hash);
-      setBusy(false);
-      if (!dir) { setError("Telefon raqam yoki parol noto'g'ri."); return; }
-      if (dir.twoFactorEnabled) { setTwoFAStep({ directorId: dir.id, demoCode: generateDemoCode() }); return; }
-      onLoginDirector(dir.id);
-    } else {
-      const mgr = directorData.managers.find(m => normalizePhone(m.phone) === normalized && m.passwordHash === hash);
-      setBusy(false);
-      if (mgr) onLoginManager(mgr.id); else setError("Telefon raqam yoki parol noto'g'ri.");
-    }
+    const dir = directorData.directors.find(d => normalizePhone(d.phone) === normalized && d.passwordHash === hash);
+    setBusy(false);
+    if (!dir) { setError("Telefon raqam yoki parol noto'g'ri."); return; }
+    if (dir.twoFactorEnabled) { setTwoFAStep({ directorId: dir.id, demoCode: generateDemoCode() }); return; }
+    onLoginDirector(dir.id);
   }
 
   async function handleRegister() {
@@ -550,7 +520,7 @@ function DirectorAuth({ directorData, onLoginDirector, onLoginManager, onRegiste
         <p className="text-white/60 text-base max-w-md">Filiallar, menejerlar, o'qituvchilar, kurslar, to'lovlar va moliya — barchasi bitta direktor panelida.</p>
       </div>
       <div className="flex-1 flex items-center justify-center p-4 relative z-10">
-        <div className={`${GLASS} rounded-3xl p-6 sm:p-8 w-full max-w-sm`} style={{ background: 'linear-gradient(160deg, rgba(15,15,35,0.8), rgba(25,15,40,0.75))' }}>
+        <div className={`${GLASS} rounded-3xl p-6 sm:p-8 w-full max-w-sm`} style={{ background: 'rgba(10,20,60,0.85)' }}>
           <div className="text-center mb-6 lg:hidden"><p className="text-3xl mb-2">🏫</p><h1 className="font-display text-xl font-bold">Direktor Panel</h1></div>
           {twoFAStep ? (
             <TwoFactorStep demoCode={twoFAStep.demoCode} onVerify={() => onLoginDirector(twoFAStep.directorId)} onBack={() => setTwoFAStep(null)} onResend={() => setTwoFAStep(s => ({ ...s, demoCode: generateDemoCode() }))} />
@@ -562,10 +532,6 @@ function DirectorAuth({ directorData, onLoginDirector, onLoginManager, onRegiste
               </div>
               {mode === 'login' ? (
                 <div className="space-y-3">
-                  <div className="flex gap-2 mb-1 bg-white/5 border border-white/10 rounded-xl p-1">
-                    <button onClick={() => setRoleTab('director')} className={`flex-1 text-xs py-1.5 rounded-lg transition-all ${roleTab === 'director' ? 'bg-white/20 text-white' : 'text-white/50'}`}>Direktor</button>
-                    <button onClick={() => setRoleTab('manager')} className={`flex-1 text-xs py-1.5 rounded-lg transition-all ${roleTab === 'manager' ? 'bg-white/20 text-white' : 'text-white/50'}`}>Menejer</button>
-                  </div>
                   <div><label className={LABEL_CLS}>Telefon raqam</label><PhoneInput value={phone} onChange={setPhone} autoFocus /></div>
                   <div className="relative">
                     <label className={LABEL_CLS}>Parol</label>
@@ -574,7 +540,6 @@ function DirectorAuth({ directorData, onLoginDirector, onLoginManager, onRegiste
                   </div>
                   {error && <p className="text-rose-300 text-xs">{error}</p>}
                   <PrimaryButton onClick={handleLogin} disabled={busy} className="w-full">{busy ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />} Kirish</PrimaryButton>
-                  <p className="text-white/30 text-[11px] text-center pt-1">Namuna direktor: +998 90 123 40 00 / direktor123</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -621,11 +586,9 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
   const pendingCount = finance.filter(f => f.status === 'pending').length;
 
   const courses = directorData.courses.filter(c => branchIds.includes(c.branchId));
-  const expectedRevenue = courses.reduce((sum, c) => {
-    const cGroups = opGroups(opData).filter(g => g.courseId === c.id);
-    const studentIds = new Set(); cGroups.forEach(g => opStudentsInGroups(opData, [g.id]).forEach(s => studentIds.add(s.id)));
-    return sum + c.price * studentIds.size;
-  }, 0);
+  const courseIds = courses.map(c => c.id);
+  const branchGroups = opGroups(opData).filter(g => courseIds.includes(g.courseId));
+  const expectedRevenue = branchGroups.reduce((sum, g) => sum + (g.price || 0) * opGroupStudentCount(opData, g.id), 0);
   const activeStudents = opActiveStudents(opData);
   const frozenStudents = opFrozenStudents(opData);
 
@@ -644,12 +607,13 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
 
   const courseRevenue = courses.map(c => {
     const cGroups = opGroups(opData).filter(g => g.courseId === c.id);
+    const revenue = cGroups.reduce((sum, g) => sum + (g.price || 0) * opGroupStudentCount(opData, g.id), 0);
     const studentIds = new Set(); cGroups.forEach(g => opStudentsInGroups(opData, [g.id]).forEach(s => studentIds.add(s.id)));
-    return { name: c.name.length > 14 ? c.name.slice(0, 14) + '…' : c.name, Daromad: c.price * studentIds.size, Talaba: studentIds.size };
+    return { name: c.name.length > 14 ? c.name.slice(0, 14) + '…' : c.name, Daromad: revenue, Talaba: studentIds.size };
   }).sort((a, b) => b.Daromad - a.Daromad).slice(0, 6);
 
   // Payment method breakdown (this month)
-  const monthPayments = directorData.payments.filter(p => p.month === month && courses.some(c => c.id === p.courseId));
+  const monthPayments = directorData.payments.filter(p => p.month === month && branchGroups.some(g => g.id === p.groupId));
   const cashTotal = monthPayments.filter(p => p.method === 'cash').reduce((s, p) => s + p.amount, 0);
   const cardTotal = monthPayments.filter(p => p.method === 'card').reduce((s, p) => s + p.amount, 0);
   const paymentMethodData = [{ name: 'Naqd', value: cashTotal }, { name: 'Plastik', value: cardTotal }].filter(d => d.value > 0);
@@ -852,7 +816,7 @@ function BranchDetailModal({ branch, directorData, opData, onClose }) {
 
 /* ============================== MANAGERS PAGE ============================== */
 
-function ManagersPage({ director, directorData, onImpersonate, openModal }) {
+function ManagersPage({ director, directorData, openModal }) {
   const myBranches = directorData.branches.filter(b => b.directorId === director.id);
   const myBranchIds = myBranches.map(b => b.id);
   const managers = directorData.managers.filter(m => (m.branchIds || []).some(id => myBranchIds.includes(id))).sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -860,7 +824,7 @@ function ManagersPage({ director, directorData, onImpersonate, openModal }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h2 className="font-display text-2xl font-bold text-white">Menejerlar</h2><p className="text-white/50 text-sm mt-0.5">{managers.length} ta menejer</p></div>
+        <div><h2 className="font-display text-2xl font-bold text-white">Menejerlar</h2><p className="text-white/50 text-sm mt-0.5">{managers.length} ta menejer · menejerlar alohida "Menejer" ilovasi orqali shu telefon/parol bilan kiradi</p></div>
         <PrimaryButton onClick={() => openModal({ type: 'managerForm' })} disabled={myBranches.length === 0}><Plus size={16} /> Menejer qo'shish</PrimaryButton>
       </div>
       {best && best.rating >= 4 && (
@@ -883,7 +847,6 @@ function ManagersPage({ director, directorData, onImpersonate, openModal }) {
                 <p className="text-white text-sm font-semibold shrink-0">{money(m.monthlySalary)} so'm</p>
                 <button onClick={() => openModal({ type: 'managerForm', editing: m })} className={BTN_ICON} title="Tahrirlash"><Pencil size={14} /></button>
                 <button onClick={() => openModal({ type: 'managerPermissions', managerId: m.id })} className={BTN_ICON} title="Ruxsatlar"><Settings size={14} /></button>
-                <button onClick={() => onImpersonate(m.id)} className={BTN_GHOST} title="Menejer sifatida kirish"><ArrowRightLeft size={14} /> Kirish</button>
                 <button onClick={() => openModal({ type: 'confirm', message: `${m.name}ni o'chirasizmi?`, action: { kind: 'deleteManager', managerId: m.id } })} className={BTN_ICON}><Trash2 size={14} /></button>
               </div>
             );
@@ -1005,6 +968,65 @@ function HolidaysPage({ directorId, directorData, addHoliday, removeHoliday, can
   );
 }
 
+/* ============================== NOTIFICATIONS ============================== */
+
+function NotificationsPage({ notifLog, onMarkRead, onMarkAllRead, onClear }) {
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const unreadCount = notifLog.filter(n => !n.read).length;
+  const readCount = notifLog.length - unreadCount;
+
+  const filtered = notifLog.filter(n => {
+    if (filter === 'unread' && n.read) return false;
+    if (filter === 'read' && !n.read) return false;
+    if (search && !n.message.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div><h2 className="font-display text-2xl font-bold text-white">Bildirishnomalar</h2><p className="text-white/50 text-sm mt-0.5">Tizim xabarlari va e'lonlarni kuzating</p></div>
+        <div className="flex gap-2">
+          {unreadCount > 0 && <button onClick={onMarkAllRead} className={BTN_GHOST}><Check size={14} /> Barchasini o'qish</button>}
+          {notifLog.length > 0 && <button onClick={onClear} className={BTN_GHOST}><Trash2 size={14} /> Tozalash</button>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Bell} label="Jami bildirishnomalar" value={notifLog.length} />
+        <StatCard icon={Bell} label="O'qilmagan" value={unreadCount} />
+        <StatCard icon={CheckCircle2} label="O'qilgan" value={readCount} />
+      </div>
+
+      <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-1.5 bg-white/5 border border-white/10 rounded-xl p-1">
+          {[['all', 'Barchasi'], ['unread', "O'qilmagan"], ['read', "O'qilgan"]].map(([id, label]) => (
+            <button key={id} onClick={() => setFilter(id)} className={`text-xs px-3 py-1.5 rounded-lg transition-all ${filter === id ? 'bg-white/20 text-white' : 'text-white/50'}`}>{label}</button>
+          ))}
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Bildirishnomalarni qidirish..." className={`${INPUT_CLS} flex-1 min-w-[200px]`} />
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState icon={Bell} title="Bildirishnoma yo'q" subtitle={notifLog.length === 0 ? "Hozircha hech qanday bildirishnoma kelmagan." : "Bu filtrga mos bildirishnoma topilmadi."} />
+      ) : (
+        <div className="space-y-2">
+          {filtered.map(n => (
+            <button key={n.id} onClick={() => !n.read && onMarkRead(n.id)} className={`${GLASS} w-full text-left rounded-2xl p-4 flex items-start gap-3 transition-all ${n.read ? 'opacity-60' : 'hover:bg-white/10'}`}>
+              <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-white/20' : 'bg-sky-400'}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-white/90 text-sm">{n.message}</p>
+                <p className="text-white/35 text-xs mt-1">{timeAgo(n.createdAt)}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ============================== FINANCE ============================== */
 
 function FinancePage({ role, scopeBranchIds, directorData, allBranches, addFinance, approveFinance, rejectFinance }) {
@@ -1119,7 +1141,6 @@ function PaymentsPage({ scopeBranches, directorData, opData, openModal }) {
   const rows = [];
   groups.forEach(g => {
     const course = courses.find(c => c.id === g.courseId);
-    if (!course) return;
     opStudentsInGroups(opData, [g.id]).forEach(s => rows.push({ student: s, group: g, course }));
   });
 
@@ -1134,8 +1155,8 @@ function PaymentsPage({ scopeBranches, directorData, opData, openModal }) {
     return true;
   });
 
-  const totalPending = filtered.filter(r => getPaymentStatus(directorData.payments, r.student.id, r.course.id, month, r.course.price) !== 'paid')
-    .reduce((sum, r) => sum + (r.course.price - getPaymentTotal(directorData.payments, r.student.id, r.course.id, month)), 0);
+  const totalPending = filtered.filter(r => getPaymentStatus(directorData.payments, r.student.id, r.group.id, month, r.group.price) !== 'paid')
+    .reduce((sum, r) => sum + ((r.group.price || 0) - getPaymentTotal(directorData.payments, r.student.id, r.group.id, month)), 0);
 
   return (
     <div className="space-y-5">
@@ -1159,27 +1180,28 @@ function PaymentsPage({ scopeBranches, directorData, opData, openModal }) {
       ) : (
         <div className="space-y-2">
           {filtered.map(({ student, group, course }) => {
-            const paidThis = getPaymentTotal(directorData.payments, student.id, course.id, month);
-            const status = getPaymentStatus(directorData.payments, student.id, course.id, month, course.price);
-            const paidPrev = getPaymentTotal(directorData.payments, student.id, course.id, prevMonth);
-            const hasDebt = paidPrev < course.price;
+            const price = group.price || 0;
+            const paidThis = getPaymentTotal(directorData.payments, student.id, group.id, month);
+            const status = getPaymentStatus(directorData.payments, student.id, group.id, month, price);
+            const paidPrev = getPaymentTotal(directorData.payments, student.id, group.id, prevMonth);
+            const hasDebt = paidPrev < price;
             const overdue = new Date().getDate() > 20 && status !== 'paid';
             return (
-              <div key={student.id + course.id} className={`${GLASS} rounded-2xl p-4 flex items-center gap-3 flex-wrap`}>
+              <div key={student.id + group.id} className={`${GLASS} rounded-2xl p-4 flex items-center gap-3 flex-wrap`}>
                 <Avatar name={student.name} color={group.color} size={40} />
                 <div className="min-w-0 flex-1">
                   <p className="text-white text-sm font-medium truncate">{student.name}</p>
-                  <p className="text-white/40 text-xs truncate">{group.name} · {course.name}</p>
+                  <p className="text-white/40 text-xs truncate">{group.name}{course ? ` · ${course.name}` : ''}</p>
                   <div className="flex gap-1.5 mt-1 flex-wrap">
                     {status === 'paid' && <span className="text-[10px] bg-emerald-400/20 border border-emerald-300/40 text-emerald-200 px-2 py-0.5 rounded-full">To'landi</span>}
-                    {status === 'partial' && <span className="text-[10px] bg-amber-400/20 border border-amber-300/40 text-amber-200 px-2 py-0.5 rounded-full">Qisman: {money(paidThis)}/{money(course.price)}</span>}
+                    {status === 'partial' && <span className="text-[10px] bg-amber-400/20 border border-amber-300/40 text-amber-200 px-2 py-0.5 rounded-full">Qisman: {money(paidThis)}/{money(price)}</span>}
                     {status === 'unpaid' && <span className="text-[10px] bg-rose-400/20 border border-rose-300/40 text-rose-200 px-2 py-0.5 rounded-full">To'lanmagan</span>}
                     {hasDebt && <span className="text-[10px] bg-rose-500/30 border border-rose-400/50 text-rose-100 px-2 py-0.5 rounded-full">O'tgan oydan qarz</span>}
                     {overdue && <span className="text-[10px] bg-red-500/40 border border-red-400/60 text-white px-2 py-0.5 rounded-full flex items-center gap-1"><AlertTriangle size={10} /> Muddati o'tgan</span>}
                   </div>
                 </div>
-                {status !== 'paid' && <p className="text-white/50 text-xs shrink-0">Kutilmoqda: {money(course.price - paidThis)} so'm</p>}
-                <button onClick={() => openModal({ type: 'recordPayment', studentId: student.id, courseId: course.id })} className={BTN_GHOST}><Plus size={14} /> To'lov</button>
+                {status !== 'paid' && <p className="text-white/50 text-xs shrink-0">Kutilmoqda: {money(price - paidThis)} so'm</p>}
+                <button onClick={() => openModal({ type: 'recordPayment', studentId: student.id, groupId: group.id })} className={BTN_GHOST}><Plus size={14} /> To'lov</button>
               </div>
             );
           })}
@@ -1189,10 +1211,10 @@ function PaymentsPage({ scopeBranches, directorData, opData, openModal }) {
   );
 }
 
-function RecordPaymentModal({ initialStudentId, initialCourseId, scopeBranches, directorData, opData, onSubmit, onClose }) {
+function RecordPaymentModal({ initialStudentId, initialGroupId, scopeBranches, directorData, opData, onSubmit, onClose }) {
   const [search, setSearch] = useState('');
   const [studentId, setStudentId] = useState(initialStudentId || '');
-  const [courseId, setCourseId] = useState(initialCourseId || '');
+  const [groupId, setGroupId] = useState(initialGroupId || '');
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('cash');
   const [error, setError] = useState('');
@@ -1205,22 +1227,22 @@ function RecordPaymentModal({ initialStudentId, initialCourseId, scopeBranches, 
 
   const matches = search.length > 0 && !studentId ? allStudents.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || normalizePhone(s.phone).includes(normalizePhone(search))).slice(0, 6) : [];
   const selectedStudent = allStudents.find(s => s.id === studentId);
-  const studentCourseOptions = selectedStudent
-    ? groups.filter(g => (selectedStudent.groupIds || []).includes(g.id)).map(g => ({ group: g, course: courses.find(c => c.id === g.courseId) })).filter(x => x.course)
+  const studentGroupOptions = selectedStudent
+    ? groups.filter(g => (selectedStudent.groupIds || []).includes(g.id)).map(g => ({ group: g, course: courses.find(c => c.id === g.courseId) }))
     : [];
 
   function selectStudent(s) {
     setStudentId(s.id); setSearch(s.name);
-    const opts = groups.filter(g => (s.groupIds || []).includes(g.id)).map(g => courses.find(c => c.id === g.courseId)).filter(Boolean);
-    if (opts.length === 1) setCourseId(opts[0].id);
+    const opts = groups.filter(g => (s.groupIds || []).includes(g.id));
+    if (opts.length === 1) setGroupId(opts[0].id);
   }
 
   function submit() {
     setError('');
-    if (!studentId || !courseId) { setError("O'quvchi va kurs/guruhni tanlang."); return; }
+    if (!studentId || !groupId) { setError("O'quvchi va guruhni tanlang."); return; }
     const amt = parseFloat(amount);
     if (!amt || amt <= 0) { setError("To'g'ri summa kiriting."); return; }
-    onSubmit({ studentId, courseId, amount: amt, method, date: todayISO(), month: thisMonthKey() });
+    onSubmit({ studentId, groupId, amount: amt, method, date: todayISO(), month: thisMonthKey() });
     onClose();
   }
 
@@ -1229,7 +1251,7 @@ function RecordPaymentModal({ initialStudentId, initialCourseId, scopeBranches, 
       <div className="space-y-4">
         <div>
           <label className={LABEL_CLS}>O'quvchi (ism yoki telefon)</label>
-          <input value={search} onChange={e => { setSearch(e.target.value); setStudentId(''); setCourseId(''); }} placeholder="Ism familiya yozing..." className={INPUT_CLS} autoFocus />
+          <input value={search} onChange={e => { setSearch(e.target.value); setStudentId(''); setGroupId(''); }} placeholder="Ism familiya yozing..." className={INPUT_CLS} autoFocus />
           {matches.length > 0 && (
             <div className="mt-1.5 space-y-1 max-h-40 overflow-y-auto">
               {matches.map(s => (
@@ -1241,12 +1263,12 @@ function RecordPaymentModal({ initialStudentId, initialCourseId, scopeBranches, 
           )}
         </div>
 
-        {selectedStudent && studentCourseOptions.length > 0 && (
+        {selectedStudent && studentGroupOptions.length > 0 && (
           <div>
             <label className={LABEL_CLS}>Guruh / kurs</label>
-            <select value={courseId} onChange={e => setCourseId(e.target.value)} className={INPUT_CLS}>
+            <select value={groupId} onChange={e => setGroupId(e.target.value)} className={INPUT_CLS}>
               <option value="" className="bg-violet-950">— Tanlang —</option>
-              {studentCourseOptions.map(({ group, course }) => <option key={group.id} value={course.id} className="bg-violet-950">{group.name} — {course.name} ({money(course.price)} so'm)</option>)}
+              {studentGroupOptions.map(({ group, course }) => <option key={group.id} value={group.id} className="bg-violet-950">{group.name}{course ? ` — ${course.name}` : ''} ({money(group.price || 0)} so'm)</option>)}
             </select>
           </div>
         )}
@@ -1280,48 +1302,55 @@ function CoursesPage({ scopeBranches, directorData, opData, openModal, canEdit }
   const month = thisMonthKey();
 
   function courseGroups(courseId) { return opGroups(opData).filter(g => g.courseId === courseId); }
-  function courseStudents(courseId) { return opStudentsInGroups(opData, courseGroups(courseId).map(g => g.id)); }
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h2 className="font-display text-2xl font-bold text-white">Kurslar</h2><p className="text-white/50 text-sm mt-0.5">Kurs katalogi va daromad (to'lovlarni "To'lovlar" bo'limidan qabul qiling)</p></div>
+        <div><h2 className="font-display text-2xl font-bold text-white">Kurslar</h2><p className="text-white/50 text-sm mt-0.5">Kurs katalogi — har bir kurs ichida bir nechta guruh bo'lishi mumkin</p></div>
         {canEdit && <PrimaryButton onClick={() => openModal({ type: 'courseForm' })}><Plus size={16} /> Yangi kurs</PrimaryButton>}
       </div>
 
       {courses.length === 0 ? (
-        <EmptyState icon={BookOpen} title="Hali kurs yo'q" subtitle="Kurs yarating — keyin ustoz ilovasida guruh yaratilganda shu kursni tanlash mumkin bo'ladi." />
+        <EmptyState icon={BookOpen} title="Hali kurs yo'q" subtitle="Avval kurs nomini yarating, keyin unga guruh(lar) ochasiz." />
       ) : (
         <div className="space-y-3">
           {courses.map(c => {
             const groups = courseGroups(c.id);
-            const studs = courseStudents(c.id);
-            const revenue = c.price * studs.length;
-            const paidCount = studs.filter(s => getPaymentStatus(directorData.payments, s.id, c.id, month, c.price) === 'paid').length;
-            const full = c.capacity && studs.length >= c.capacity;
+            const studs = opStudentsInGroups(opData, groups.map(g => g.id));
+            const revenue = groups.reduce((sum, g) => sum + (g.price || 0) * opGroupStudentCount(opData, g.id), 0);
             const open = expandedId === c.id;
             return (
               <div key={c.id} className={`${GLASS} rounded-3xl overflow-hidden`}>
                 <div className="w-full flex items-center justify-between p-5 flex-wrap gap-2">
                   <button onClick={() => setExpandedId(open ? null : c.id)} className="flex-1 text-left min-w-[200px]">
-                    <p className="font-display text-white font-semibold flex items-center gap-2 flex-wrap">{c.name}{full && <span className="text-[10px] bg-amber-400/20 border border-amber-300/40 text-amber-200 px-2 py-0.5 rounded-full">To'lgan</span>}</p>
-                    <p className="text-white/45 text-xs mt-0.5">{(c.days || []).join(', ') || 'Kunsiz'} · {c.time} · {groups.length} guruh · {studs.length} o'quvchi</p>
+                    <p className="font-display text-white font-semibold">{c.name}</p>
+                    <p className="text-white/45 text-xs mt-0.5">{groups.length} guruh · {studs.length} o'quvchi</p>
                   </button>
                   <div className="flex items-center gap-2">
-                    <div className="text-right"><p className="text-white font-semibold text-sm">{money(revenue)} so'm/oy</p><p className="text-white/40 text-xs">{paidCount}/{studs.length} to'liq to'lagan</p></div>
+                    <div className="text-right"><p className="text-white font-semibold text-sm">{money(revenue)} so'm/oy</p></div>
+                    {canEdit && <button onClick={() => openModal({ type: 'groupForm', courseId: c.id })} className={BTN_GHOST}><Plus size={14} /> Guruh</button>}
                     {canEdit && <button onClick={() => openModal({ type: 'courseForm', editing: c })} className={BTN_ICON}><Pencil size={14} /></button>}
                   </div>
                 </div>
                 {open && (
                   <div className="px-5 pb-5 border-t border-white/10 pt-4 space-y-2">
-                    {studs.length === 0 ? <p className="text-white/40 text-sm">Hali bu kursda o'quvchi yo'q.</p> : studs.map(s => {
-                      const status = getPaymentStatus(directorData.payments, s.id, c.id, month, c.price);
+                    {groups.length === 0 ? <p className="text-white/40 text-sm">Bu kursda hali guruh yo'q.</p> : groups.map(g => {
+                      const gStuds = opStudentsInGroups(opData, [g.id]);
+                      const paidCount = gStuds.filter(s => getPaymentStatus(directorData.payments, s.id, g.id, month, g.price) === 'paid').length;
                       return (
-                        <div key={s.id} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
-                          <Avatar name={s.name} size={32} /><p className="text-white text-sm flex-1 truncate">{s.name}</p>
-                          {status === 'paid' && <span className="text-[10px] bg-emerald-400/20 text-emerald-200 px-2 py-0.5 rounded-full">To'landi</span>}
-                          {status === 'partial' && <span className="text-[10px] bg-amber-400/20 text-amber-200 px-2 py-0.5 rounded-full">Qisman</span>}
-                          {status === 'unpaid' && <span className="text-[10px] bg-rose-400/20 text-rose-200 px-2 py-0.5 rounded-full">To'lanmagan</span>}
+                        <div key={g.id} className="bg-white/5 border border-white/10 rounded-xl p-3">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: g.color }} />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-white text-sm font-medium truncate">{g.name}</p>
+                              <p className="text-white/40 text-xs">{(g.days || []).join(', ') || 'Kunsiz'} · {g.time} · {g.durationMonths ? `${g.durationMonths} oy` : ''} · {gStuds.length} o'quvchi</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-white text-sm font-semibold">{money(g.price || 0)} so'm/oy</p>
+                              <p className="text-white/40 text-[11px]">{paidCount}/{gStuds.length} to'liq to'lagan</p>
+                            </div>
+                            {canEdit && <button onClick={() => openModal({ type: 'groupForm', courseId: c.id, editing: g })} className={BTN_ICON}><Pencil size={14} /></button>}
+                          </div>
                         </div>
                       );
                     })}
@@ -1337,29 +1366,44 @@ function CoursesPage({ scopeBranches, directorData, opData, openModal, canEdit }
   );
 }
 
-/* ============================== GROUPS PROFITABILITY ============================== */
+/* ============================== GROUPS PAGE ============================== */
 
-function GroupsProfitability({ directorData, opData, setGroupFee, scopeBranchIds }) {
+function GroupsPage({ directorData, opData, openModal, scopeBranchIds, canEdit }) {
   const allGroups = opGroups(opData);
-  const groups = scopeBranchIds ? allGroups.filter(g => g.courseId && directorData.courses.some(c => c.id === g.courseId && scopeBranchIds.includes(c.branchId))) : allGroups;
-  const rows = groups.map(g => { const count = opGroupStudentCount(opData, g.id); const fee = directorData.groupFees[g.id] || 0; return { ...g, count, fee, revenue: fee * count }; }).sort((a, b) => b.revenue - a.revenue);
+  const courses = scopeBranchIds ? directorData.courses.filter(c => scopeBranchIds.includes(c.branchId)) : directorData.courses;
+  const courseIds = courses.map(c => c.id);
+  const groups = allGroups.filter(g => g.courseId && courseIds.includes(g.courseId));
+  const rows = groups.map(g => {
+    const count = opGroupStudentCount(opData, g.id);
+    const course = courses.find(c => c.id === g.courseId);
+    return { ...g, course, count, revenue: (g.price || 0) * count };
+  }).sort((a, b) => b.revenue - a.revenue);
   return (
     <div className="space-y-5">
-      <div><h2 className="font-display text-2xl font-bold text-white">Guruhlar bo'yicha foyda</h2><p className="text-white/50 text-sm mt-0.5">Har bir guruhga oylik to'lov belgilang — daromad avtomatik hisoblanadi</p></div>
-      {rows.length === 0 ? (
-        <EmptyState icon={ClipboardList} title="Hali guruh yo'q" subtitle="O'qituvchi ilovasida guruh yarating, ular shu yerda ko'rinadi." />
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div><h2 className="font-display text-2xl font-bold text-white">Guruhlar</h2><p className="text-white/50 text-sm mt-0.5">Barcha guruhlar va ularning oylik daromadi</p></div>
+        {canEdit && courses.length > 0 && <PrimaryButton onClick={() => openModal({ type: 'groupForm' })}><Plus size={16} /> Yangi guruh</PrimaryButton>}
+      </div>
+      {courses.length === 0 ? (
+        <EmptyState icon={BookOpen} title="Avval kurs yarating" subtitle={"Guruh ochish uchun avval \"Kurslar\" bo'limida kurs nomini kiriting."} />
+      ) : rows.length === 0 ? (
+        <EmptyState icon={ClipboardList} title="Hali guruh yo'q" subtitle="Yuqoridagi tugma orqali birinchi guruhingizni oching." action={canEdit ? <PrimaryButton onClick={() => openModal({ type: 'groupForm' })}><Plus size={16} /> Guruh ochish</PrimaryButton> : null} />
       ) : (
         <div className="space-y-2">
           {rows.map((g, i) => (
             <div key={g.id} className={`${GLASS} rounded-2xl p-4 flex items-center gap-3 flex-wrap`}>
               <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: g.color }} />
-              <div className="min-w-0 flex-1"><p className="text-white text-sm font-medium truncate">{g.name}</p><p className="text-white/40 text-xs">{g.count} o'quvchi</p></div>
-              <div className="flex items-center gap-1.5"><input type="number" defaultValue={g.fee || ''} placeholder="Oylik to'lov" onBlur={e => setGroupFee(g.id, parseFloat(e.target.value) || 0)} className={`${INPUT_CLS} w-32`} /><span className="text-white/40 text-xs">so'm</span></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-white text-sm font-medium truncate">{g.name}</p>
+                <p className="text-white/40 text-xs truncate">{g.course?.name || 'Kurssiz'} · {(g.days || []).join(', ') || 'Kunsiz'} · {g.time} · {g.count} o'quvchi</p>
+              </div>
               <div className="text-right shrink-0 min-w-[110px]">
                 <p className="text-white text-sm font-semibold">{money(g.revenue)} so'm</p>
                 {g.count < 3 && <p className="text-amber-300 text-[11px]">Kam sonli — yopish mumkin</p>}
                 {i === 0 && g.revenue > 0 && <p className="text-emerald-300 text-[11px]">Asosiy foyda manbai</p>}
               </div>
+              {canEdit && <button onClick={() => openModal({ type: 'groupForm', courseId: g.courseId, editing: g })} className={BTN_ICON}><Pencil size={14} /></button>}
+              {canEdit && <button onClick={() => openModal({ type: 'confirm', message: `"${g.name}" guruhini o'chirasizmi?`, action: { kind: 'deleteGroup', groupId: g.id } })} className={BTN_ICON}><Trash2 size={14} /></button>}
             </div>
           ))}
         </div>
@@ -1438,16 +1482,10 @@ function AppBottomNav({ view, goTo, items }) {
   );
 }
 
-function TopBar({ name, photo, color, goTo, now, onLogout, onReturn, impersonating, director, updateDirector, notifLog, onClearNotifs }) {
+function TopBar({ name, photo, color, goTo, now, onLogout, director, updateDirector, notifLog, onClearNotifs }) {
   const dayName = JS_DAY_NAMES[now.getDay()];
   return (
     <div className="space-y-3 mb-6">
-      {impersonating && (
-        <div className={`${GLASS} rounded-2xl p-3 flex items-center justify-between flex-wrap gap-2`}>
-          <p className="text-white/70 text-xs flex items-center gap-2"><ArrowRightLeft size={14} /> Siz {name} sifatida ko'ryapsiz</p>
-          <button onClick={onReturn} className={BTN_GHOST}>Direktorga qaytish</button>
-        </div>
-      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {director && <ThemeSwitcher director={director} updateDirector={updateDirector} />}
@@ -1455,7 +1493,7 @@ function TopBar({ name, photo, color, goTo, now, onLogout, onReturn, impersonati
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell log={notifLog} onClear={onClearNotifs} />
-          {!impersonating && <button onClick={onLogout} className={BTN_ICON}><LogOut size={16} /></button>}
+          <button onClick={onLogout} className={BTN_ICON}><LogOut size={16} /></button>
           <button onClick={() => goTo && goTo('settings')} className="shrink-0" disabled={!goTo}><Avatar name={name} photo={photo} color={color} size={42} /></button>
         </div>
       </div>
@@ -1560,31 +1598,80 @@ function TeacherHRFormModal({ editing, branches, onSubmit, onClose }) {
 function CourseFormModal({ editing, branches, onSubmit, onClose }) {
   const [branchId, setBranchId] = useState(editing?.branchId || branches[0]?.id || '');
   const [name, setName] = useState(editing?.name || '');
-  const [days, setDays] = useState(editing?.days || []);
-  const [time, setTime] = useState(editing?.time || '15:00');
-  const [price, setPrice] = useState(editing?.price || '');
-  const [duration, setDuration] = useState(editing?.durationMonths || '3');
-  const [capacity, setCapacity] = useState(editing?.capacity || '');
   const [error, setError] = useState('');
   function submit() {
     if (!name.trim() || !branchId) { setError('Kurs nomi va filialni kiriting.'); return; }
-    onSubmit({ branchId, name: name.trim(), days, time, price: parseFloat(price) || 0, durationMonths: parseFloat(duration) || 0, capacity: capacity ? parseInt(capacity) : null });
+    onSubmit({ branchId, name: name.trim() });
     onClose();
   }
   return (
     <Modal title={editing ? 'Kursni tahrirlash' : 'Yangi kurs'} onClose={onClose}>
       <div className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {branches.length > 1 && (<div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{branches.map(b => <option key={b.id} value={b.id} className="bg-violet-950">{b.name}</option>)}</select></div>)}
-          <div><label className={LABEL_CLS}>Kurs nomi</label><input value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} placeholder="Masalan: Matematika" /></div>
-          <div><label className={LABEL_CLS}>Narxi (oylik, so'm)</label><input type="number" value={price} onChange={e => setPrice(e.target.value)} className={INPUT_CLS} /></div>
-          <div><label className={LABEL_CLS}>Vaqt</label><input type="time" value={time} onChange={e => setTime(e.target.value)} className={INPUT_CLS} /></div>
-          <div><label className={LABEL_CLS}>Davomiyligi (oy)</label><input type="number" value={duration} onChange={e => setDuration(e.target.value)} className={INPUT_CLS} /></div>
-          <div><label className={LABEL_CLS}>Sig'imi (ixtiyoriy)</label><input type="number" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="Cheksiz" className={INPUT_CLS} /></div>
-        </div>
-        <div><label className={LABEL_CLS}>Dars kunlari</label><DayPicker value={days} onChange={setDays} /></div>
+        {branches.length > 1 && (<div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{branches.map(b => <option key={b.id} value={b.id} className="bg-violet-950">{b.name}</option>)}</select></div>)}
+        <div><label className={LABEL_CLS}>Kurs nomi</label><input value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} placeholder="Masalan: Matematika" autoFocus /></div>
         {error && <p className="text-rose-300 text-xs">{error}</p>}
         <PrimaryButton onClick={submit} className="w-full">{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Saqlash' : "Qo'shish"}</PrimaryButton>
+      </div>
+    </Modal>
+  );
+}
+
+function GroupFormModal({ editing, initialCourseId, courses, groups, rooms, onSubmit, onClose }) {
+  const [courseId, setCourseId] = useState(editing?.courseId || initialCourseId || courses[0]?.id || '');
+  const [name, setName] = useState(editing?.name || '');
+  const [price, setPrice] = useState(editing?.price ?? '');
+  const [days, setDays] = useState(editing?.days || []);
+  const [time, setTime] = useState(editing?.time || '15:00');
+  const [duration, setDuration] = useState(editing?.durationMonths ?? '3');
+  const [roomId, setRoomId] = useState(editing?.roomId || '');
+  const [startDate, setStartDate] = useState(editing?.startDate || todayISO());
+  const [color, setColor] = useState(editing?.color || nextGroupColor(groups));
+  const [error, setError] = useState('');
+
+  function submit() {
+    if (!courseId) { setError('Avval kursni tanlang.'); return; }
+    if (!name.trim()) { setError('Guruh nomini kiriting.'); return; }
+    onSubmit({ courseId, name: name.trim(), price: parseFloat(price) || 0, days, time, durationMonths: parseFloat(duration) || 0, roomId: roomId || null, startDate, color });
+    onClose();
+  }
+
+  return (
+    <Modal title={editing ? 'Guruhni tahrirlash' : 'Yangi guruh'} onClose={onClose}>
+      <div className="space-y-4">
+        <div>
+          <label className={LABEL_CLS}>Kurs</label>
+          <select value={courseId} onChange={e => setCourseId(e.target.value)} className={INPUT_CLS} disabled={!!editing}>
+            {courses.length === 0 && <option value="">— Avval kurs yarating —</option>}
+            {courses.map(c => <option key={c.id} value={c.id} className="bg-violet-950">{c.name}</option>)}
+          </select>
+        </div>
+        <div><label className={LABEL_CLS}>Guruh nomi</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Masalan: Matematika - A guruh" className={INPUT_CLS} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className={LABEL_CLS}>Narxi (oylik, so'm)</label><input type="number" value={price} onChange={e => setPrice(e.target.value)} className={INPUT_CLS} /></div>
+          <div><label className={LABEL_CLS}>Davomiyligi (oy)</label><input type="number" value={duration} onChange={e => setDuration(e.target.value)} className={INPUT_CLS} /></div>
+        </div>
+        {rooms && rooms.length > 0 && (
+          <div>
+            <label className={LABEL_CLS}>Xona (ixtiyoriy)</label>
+            <select value={roomId} onChange={e => setRoomId(e.target.value)} className={INPUT_CLS}>
+              <option value="" className="bg-violet-950">— Tanlanmagan —</option>
+              {rooms.map(r => <option key={r.id} value={r.id} className="bg-violet-950">{r.name} ({r.capacity} o'rin)</option>)}
+            </select>
+          </div>
+        )}
+        <div><label className={LABEL_CLS}>Dars kunlari</label><DayPicker value={days} onChange={setDays} /></div>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className={LABEL_CLS}>Vaqt</label><input type="time" value={time} onChange={e => setTime(e.target.value)} className={INPUT_CLS} /></div>
+          <div><label className={LABEL_CLS}>Boshlanish sanasi</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={INPUT_CLS} /></div>
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Rang</label>
+          <div className="flex gap-2 flex-wrap">
+            {GROUP_COLORS.map(c => <button key={c} type="button" onClick={() => setColor(c)} className={`w-7 h-7 rounded-full border-2 ${color === c ? 'border-white scale-110' : 'border-white/20'}`} style={{ background: c }} />)}
+          </div>
+        </div>
+        {error && <p className="text-rose-300 text-xs">{error}</p>}
+        <PrimaryButton onClick={submit} className="w-full" disabled={!courseId}>{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Saqlash' : 'Guruh yaratish'}</PrimaryButton>
       </div>
     </Modal>
   );
@@ -1603,15 +1690,32 @@ export default function App() {
   const [notifLog, setNotifLog] = useState([]);
   const [overdueChecked, setOverdueChecked] = useState(false);
 
+  const hasStorage = typeof window !== 'undefined' && !!window.storage;
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const savedDirectorData = await loadSharedState(DIRECTOR_DATA_KEY);
-      const savedTeacherData = await loadSharedState(TEACHER_APP_KEY);
-      if (!cancelled) {
-        setDirectorData(savedDirectorData || seedDirectorData());
-        setOpData(savedTeacherData || { groups: [], students: [], tasks: [] });
-        setSession(loadSession(DIRECTOR_SESSION_KEY));
+      if (hasStorage) {
+        try {
+          const res = await window.storage.get(DIRECTOR_DATA_KEY, true).catch(() => null);
+          if (!cancelled) setDirectorData(res && res.value ? JSON.parse(res.value) : seedDirectorData());
+        } catch (e) { if (!cancelled) setDirectorData(seedDirectorData()); }
+        try {
+          const opRes = await window.storage.get(TEACHER_APP_KEY, true).catch(() => null);
+          if (!cancelled) setOpData(opRes && opRes.value ? JSON.parse(opRes.value) : { groups: [], students: [], tasks: [] });
+        } catch (e) { if (!cancelled) setOpData({ groups: [], students: [], tasks: [] }); }
+        try {
+          const sessRes = await window.storage.get(DIRECTOR_SESSION_KEY, false).catch(() => null);
+          if (!cancelled) setSession(sessRes && sessRes.value ? JSON.parse(sessRes.value) : null);
+        } catch (e) { if (!cancelled) setSession(null); }
+        try {
+          const notifRes = await window.storage.get(DIRECTOR_NOTIF_KEY, false).catch(() => null);
+          if (!cancelled) setNotifLog(notifRes && notifRes.value ? JSON.parse(notifRes.value) : []);
+        } catch (e) { if (!cancelled) setNotifLog([]); }
+      } else if (!cancelled) {
+        setDirectorData(seedDirectorData());
+        setOpData({ groups: [], students: [], tasks: [] });
+        setSession(null);
       }
       if (!cancelled) setLoading(false);
     })();
@@ -1621,54 +1725,63 @@ export default function App() {
   useEffect(() => {
     if (loading || !directorData) return;
     const t = setTimeout(async () => {
-      try { await saveSharedState(DIRECTOR_DATA_KEY, directorData); }
+      if (!hasStorage) return;
+      try { await window.storage.set(DIRECTOR_DATA_KEY, JSON.stringify(directorData), true); }
       catch (e) { console.error('Saqlashda xatolik:', e); }
     }, 700);
     return () => clearTimeout(t);
   }, [directorData, loading]);
 
   useEffect(() => {
+    if (loading || !opData) return;
+    const t = setTimeout(async () => {
+      if (!hasStorage) return;
+      try { await window.storage.set(TEACHER_APP_KEY, JSON.stringify(opData), true); }
+      catch (e) { console.error('Saqlashda xatolik:', e); }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [opData, loading]);
+
+  useEffect(() => {
     if (loading) return;
-    saveSession(DIRECTOR_SESSION_KEY, session);
+    (async () => {
+      if (!hasStorage) return;
+      try {
+        if (session) await window.storage.set(DIRECTOR_SESSION_KEY, JSON.stringify(session), false);
+        else await window.storage.delete(DIRECTOR_SESSION_KEY, false);
+      } catch (e) { /* ignore */ }
+    })();
   }, [session, loading]);
 
   useEffect(() => {
     if (loading) return;
-    let cancelled = false;
-
-    async function refreshTeacherData() {
-      const savedTeacherData = await loadSharedState(TEACHER_APP_KEY);
-      if (!cancelled && savedTeacherData) setOpData(savedTeacherData);
-    }
-
-    const intervalId = window.setInterval(refreshTeacherData, 5000);
-    window.addEventListener('focus', refreshTeacherData);
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-      window.removeEventListener('focus', refreshTeacherData);
-    };
-  }, [loading]);
+    const t = setTimeout(async () => {
+      if (!hasStorage) return;
+      try { await window.storage.set(DIRECTOR_NOTIF_KEY, JSON.stringify(notifLog), false); }
+      catch (e) { /* ignore */ }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [notifLog, loading]);
 
   function addNotification(message) {
     const id = generateId('n');
     setToasts(prev => [...prev, { id, message }]);
     setTimeout(() => setToasts(prev => prev.filter(n => n.id !== id)), 5000);
-    setNotifLog(prev => [{ id, message, createdAt: Date.now(), read: false }, ...prev].slice(0, 30));
+    setNotifLog(prev => [{ id, message, createdAt: Date.now(), read: false }, ...prev].slice(0, 100));
   }
   function clearNotifLog() { setNotifLog([]); }
+  function markNotifRead(id) { setNotifLog(prev => prev.map(n => n.id === id ? { ...n, read: true } : n)); }
+  function markAllNotifsRead() { setNotifLog(prev => prev.map(n => ({ ...n, read: true }))); }
 
-  // Overdue payment check (after 20th of month), once per session, director/manager only
+  // Overdue payment check (after 20th of month), once per session
   useEffect(() => {
     if (loading || !directorData || !opData || !session || overdueChecked) return;
-    if (session.role !== 'director' && session.role !== 'manager') return;
     if (new Date().getDate() <= 20) { setOverdueChecked(true); return; }
     const month = thisMonthKey();
     let unpaidCount = 0;
-    directorData.courses.forEach(c => {
-      const groups = opGroups(opData).filter(g => g.courseId === c.id);
-      const studs = opStudentsInGroups(opData, groups.map(g => g.id));
-      studs.forEach(s => { if (getPaymentStatus(directorData.payments, s.id, c.id, month, c.price) !== 'paid') unpaidCount++; });
+    opGroups(opData).forEach(g => {
+      const studs = opStudentsInGroups(opData, [g.id]);
+      studs.forEach(s => { if (getPaymentStatus(directorData.payments, s.id, g.id, month, g.price) !== 'paid') unpaidCount++; });
     });
     if (unpaidCount > 0) addNotification(`⚠️ ${unpaidCount} ta o'quvchi bu oy uchun hali to'liq to'lov qilmagan (20-sanadan o'tdi).`);
     setOverdueChecked(true);
@@ -1679,23 +1792,20 @@ export default function App() {
   function openModal(m) { setModal(m); }
   function closeModal() { setModal(null); }
 
-  function loginAsDirector(directorId) { setSession({ role: 'director', directorId }); setView('home'); }
-  function loginAsManager(managerId) { setSession({ role: 'manager', managerId }); setView('home'); }
-  function impersonateManager(managerId) { setSession(prev => ({ role: 'manager', managerId, impersonatedBy: prev.directorId })); setView('home'); }
-  function returnToDirector() { setSession(prev => ({ role: 'director', directorId: prev.impersonatedBy })); setView('managers'); }
+  function loginAsDirector(directorId) { setSession({ directorId }); setView('home'); }
   function logout() { setSession(null); setView('home'); setModal(null); }
 
   async function registerDirector(payload) {
-    const director = { id: generateId('dir'), ...payload, themeId: 'violet', customTheme: null, twoFactorEnabled: false };
+    const director = { id: generateId('dir'), ...payload, themeId: 'cosmos', customTheme: null, twoFactorEnabled: false };
     const branch = { id: generateId('br'), directorId: director.id, name: payload.centerName, address: payload.address, color: '#8b5cf6' };
     setDirectorData(prev => ({ ...prev, directors: [...prev.directors, director], branches: [...prev.branches, branch] }));
-    setSession({ role: 'director', directorId: director.id });
+    setSession({ directorId: director.id });
     setView('home');
     addNotification("Ro'yxatdan muvaffaqiyatli o'tdingiz!");
   }
 
   function updateDirector(updated) { setDirectorData(prev => ({ ...prev, directors: prev.directors.map(d => d.id === updated.id ? updated : d) })); }
-  function addBranch(payload) { if (session.role !== 'director') return; setDirectorData(prev => ({ ...prev, branches: [...prev.branches, { id: generateId('br'), directorId: session.directorId, color: '#0ea5e9', ...payload }] })); addNotification(`"${payload.name}" filiali qo'shildi.`); }
+  function addBranch(payload) { setDirectorData(prev => ({ ...prev, branches: [...prev.branches, { id: generateId('br'), directorId: session.directorId, color: '#0ea5e9', ...payload }] })); addNotification(`"${payload.name}" filiali qo'shildi.`); }
   function updateBranch(id, payload) { setDirectorData(prev => ({ ...prev, branches: prev.branches.map(b => b.id === id ? { ...b, ...payload } : b) })); addNotification('Filial yangilandi.'); }
   function addManager(payload) { setDirectorData(prev => ({ ...prev, managers: [...prev.managers, { id: generateId('mgr'), allowedPages: MANAGER_NAV_ALL.map(p => p.id), ...payload }] })); addNotification("Menejer qo'shildi."); }
   function updateManager(id, payload) { setDirectorData(prev => ({ ...prev, managers: prev.managers.map(m => m.id === id ? { ...m, ...payload } : m) })); addNotification('Menejer yangilandi.'); }
@@ -1711,27 +1821,39 @@ export default function App() {
   function rejectFinance(id) { setDirectorData(prev => ({ ...prev, finance: prev.finance.filter(f => f.id !== id) })); addNotification('Xarajat rad etildi.'); }
   function addCourse(payload) { setDirectorData(prev => ({ ...prev, courses: [...prev.courses, { id: generateId('crs'), ...payload }] })); addNotification("Kurs qo'shildi."); }
   function updateCourse(id, payload) { setDirectorData(prev => ({ ...prev, courses: prev.courses.map(c => c.id === id ? { ...c, ...payload } : c) })); addNotification('Kurs yangilandi.'); }
-  function deleteCourse(id) { setDirectorData(prev => ({ ...prev, courses: prev.courses.filter(c => c.id !== id) })); addNotification("Kurs o'chirildi."); }
-  function setGroupFee(groupId, fee) { setDirectorData(prev => ({ ...prev, groupFees: { ...prev.groupFees, [groupId]: fee } })); }
+  function deleteCourse(id) {
+    setDirectorData(prev => ({ ...prev, courses: prev.courses.filter(c => c.id !== id) }));
+    setOpData(prev => ({ ...prev, groups: (prev.groups || []).filter(g => g.courseId !== id) }));
+    addNotification("Kurs va unga tegishli guruhlar o'chirildi.");
+  }
+  function addGroup(payload) {
+    setOpData(prev => ({ ...prev, groups: [...(prev.groups || []), { id: generateId('g'), ...payload }] }));
+    addNotification("Guruh ochildi.");
+  }
+  function updateGroup(id, payload) {
+    setOpData(prev => ({ ...prev, groups: (prev.groups || []).map(g => g.id === id ? { ...g, ...payload } : g) }));
+    addNotification('Guruh yangilandi.');
+  }
+  function deleteGroup(id) {
+    setOpData(prev => ({ ...prev, groups: (prev.groups || []).map(g => g.id === id ? null : g).filter(Boolean), students: (prev.students || []).map(s => ({ ...s, groupIds: (s.groupIds || []).filter(gid => gid !== id) })) }));
+    addNotification("Guruh o'chirildi.");
+  }
 
   // Recording a payment also books it as approved finance income for that branch
   function recordPayment(payload) {
-    const course = directorData.courses.find(c => c.id === payload.courseId);
+    const group = opGroups(opData).find(g => g.id === payload.groupId);
+    const course = group ? directorData.courses.find(c => c.id === group.courseId) : null;
     const branchId = course?.branchId;
     setDirectorData(prev => ({
       ...prev,
       payments: [...prev.payments, { id: generateId('pay'), createdAt: Date.now(), ...payload }],
-      finance: branchId ? [...prev.finance, { id: generateId('fin'), branchId, type: 'income', amount: payload.amount, category: "O'quv to'lovi", note: course?.name || '', date: payload.date, status: 'approved', createdAt: Date.now() }] : prev.finance,
+      finance: branchId ? [...prev.finance, { id: generateId('fin'), branchId, type: 'income', amount: payload.amount, category: "O'quv to'lovi", note: group?.name || '', date: payload.date, status: 'approved', createdAt: Date.now() }] : prev.finance,
     }));
     addNotification(`To'lov qabul qilindi: ${money(payload.amount)} so'm.`);
   }
 
   function currentDirectorId() {
-    if (session?.role === 'director') return session.directorId;
-    if (session?.role === 'manager' && session.impersonatedBy) return session.impersonatedBy;
-    const manager = directorData?.managers.find(m => m.id === session?.managerId);
-    const branch = directorData?.branches.find(b => (manager?.branchIds || []).includes(b.id));
-    return branch?.directorId;
+    return session?.directorId;
   }
 
   function handleConfirm() {
@@ -1740,66 +1862,24 @@ export default function App() {
     if (action.kind === 'deleteManager') deleteManager(action.managerId);
     if (action.kind === 'deleteTeacherHR') deleteTeacherHR(action.teacherHRId);
     if (action.kind === 'deleteCourse') deleteCourse(action.courseId);
+    if (action.kind === 'deleteGroup') deleteGroup(action.groupId);
     setModal(null);
   }
 
-  if (loading || !directorData || !opData) return <ThemeContext.Provider value={THEMES.violet}><LoadingScreen /></ThemeContext.Provider>;
+  if (loading || !directorData || !opData) return <ThemeContext.Provider value={THEMES.cosmos}><LoadingScreen /></ThemeContext.Provider>;
 
-  const currentDirector = session?.role === 'director'
-    ? directorData.directors.find(d => d.id === session.directorId)
-    : (session?.role === 'manager' && session.impersonatedBy ? directorData.directors.find(d => d.id === session.impersonatedBy) : null);
-  const activeTheme = currentDirector ? (currentDirector.themeId === 'custom' && currentDirector.customTheme ? currentDirector.customTheme : (THEMES[currentDirector.themeId] || THEMES.violet)) : THEMES.violet;
+  const currentDirector = session ? directorData.directors.find(d => d.id === session.directorId) : null;
+  const activeTheme = currentDirector ? (currentDirector.themeId === 'custom' && currentDirector.customTheme ? currentDirector.customTheme : (THEMES[currentDirector.themeId] || THEMES.cosmos)) : THEMES.cosmos;
 
   if (!session) {
-    return <ThemeContext.Provider value={activeTheme}><DirectorAuth directorData={directorData} onLoginDirector={loginAsDirector} onLoginManager={loginAsManager} onRegister={registerDirector} /></ThemeContext.Provider>;
+    return <ThemeContext.Provider value={activeTheme}><DirectorAuth directorData={directorData} onLoginDirector={loginAsDirector} onRegister={registerDirector} /></ThemeContext.Provider>;
   }
 
   const now = new Date();
 
-  /* ---------- MANAGER SESSION ---------- */
-  if (session.role === 'manager') {
-    const manager = directorData.managers.find(m => m.id === session.managerId);
-    const myBranches = manager ? directorData.branches.filter(b => (manager.branchIds || []).includes(b.id)) : [];
-    if (!manager || myBranches.length === 0) return <ThemeContext.Provider value={THEMES.violet}><LoadingScreen /></ThemeContext.Provider>;
-    const allowedPages = manager.allowedPages || MANAGER_NAV_ALL.map(p => p.id);
-    const visibleNav = MANAGER_NAV_ALL.filter(p => allowedPages.includes(p.id));
-    const effectiveView = allowedPages.includes(view) ? view : (visibleNav[0]?.id || 'home');
-    const branchIds = myBranches.map(b => b.id);
-    const directorForOrg = directorData.directors.find(d => d.id === myBranches[0].directorId);
-
-    return (
-      <ThemeContext.Provider value={activeTheme}>
-        <div className="min-h-screen w-full text-white relative" style={{ background: activeTheme.bg, fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
-          <GlobalStyleTag />
-          <BackgroundBlobs />
-          <div className="relative z-10 flex min-h-screen">
-            <AppSidebar view={effectiveView} goTo={goTo} items={visibleNav} title={`🏢 ${myBranches.map(b => b.name).join(', ')}`} />
-            <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto w-full">
-              <TopBar name={manager.name} color={myBranches[0].color} goTo={null} now={now} onLogout={logout} onReturn={returnToDirector} impersonating={!!session.impersonatedBy} director={directorForOrg} updateDirector={updateDirector} notifLog={notifLog} onClearNotifs={clearNotifLog} />
-              {effectiveView === 'home' && <DashboardHome scopeBranches={myBranches} directorData={directorData} opData={opData} centerLabel={myBranches.map(b => b.name).join(', ')} allBranches={true} />}
-              {effectiveView === 'payments' && <PaymentsPage scopeBranches={myBranches} directorData={directorData} opData={opData} openModal={openModal} />}
-              {effectiveView === 'teachers' && <TeachersHR scopeBranches={myBranches} directorData={directorData} opData={opData} openModal={openModal} canEdit={true} />}
-              {effectiveView === 'courses' && <CoursesPage scopeBranches={myBranches} directorData={directorData} opData={opData} openModal={openModal} canEdit={true} />}
-              {effectiveView === 'groups' && <GroupsProfitability directorData={directorData} opData={opData} setGroupFee={setGroupFee} scopeBranchIds={branchIds} />}
-              {effectiveView === 'finance' && <FinancePage role="manager" scopeBranchIds={branchIds} directorData={directorData} allBranches={myBranches} addFinance={addFinance} approveFinance={approveFinance} rejectFinance={rejectFinance} />}
-              {effectiveView === 'holidays' && <HolidaysPage directorId={myBranches[0].directorId} directorData={directorData} addHoliday={addHoliday} removeHoliday={removeHoliday} canEdit={false} />}
-            </main>
-          </div>
-          <AppBottomNav view={effectiveView} goTo={goTo} items={visibleNav} />
-          <ToastStack toasts={toasts} onDismiss={id => setToasts(prev => prev.filter(n => n.id !== id))} />
-
-          {modal?.type === 'teacherHRForm' && <TeacherHRFormModal editing={modal.editing} branches={myBranches} onSubmit={p => modal.editing ? updateTeacherHR(modal.editing.id, p) : addTeacherHR(p)} onClose={closeModal} />}
-          {modal?.type === 'courseForm' && <CourseFormModal editing={modal.editing} branches={myBranches} onSubmit={p => modal.editing ? updateCourse(modal.editing.id, p) : addCourse(p)} onClose={closeModal} />}
-          {modal?.type === 'recordPayment' && <RecordPaymentModal initialStudentId={modal.studentId} initialCourseId={modal.courseId} scopeBranches={myBranches} directorData={directorData} opData={opData} onSubmit={recordPayment} onClose={closeModal} />}
-          {modal?.type === 'confirm' && <ConfirmModal message={modal.message} onConfirm={handleConfirm} onCancel={closeModal} />}
-        </div>
-      </ThemeContext.Provider>
-    );
-  }
-
   /* ---------- DIRECTOR SESSION ---------- */
   const director = currentDirector;
-  if (!director) return <ThemeContext.Provider value={THEMES.violet}><LoadingScreen /></ThemeContext.Provider>;
+  if (!director) return <ThemeContext.Provider value={THEMES.cosmos}><LoadingScreen /></ThemeContext.Provider>;
   const myBranches = directorData.branches.filter(b => b.directorId === director.id);
 
   return (
@@ -1810,17 +1890,18 @@ export default function App() {
         <div className="relative z-10 flex min-h-screen">
           <AppSidebar view={view} goTo={goTo} items={DIRECTOR_NAV} title={`🏫 ${director.centerName}`} />
           <main className="flex-1 p-4 md:p-8 pb-28 md:pb-8 max-w-6xl mx-auto w-full">
-            <TopBar name={director.name} photo={director.logo} goTo={goTo} now={now} onLogout={logout} impersonating={false} director={director} updateDirector={updateDirector} notifLog={notifLog} onClearNotifs={clearNotifLog} />
+            <TopBar name={director.name} photo={director.logo} goTo={goTo} now={now} onLogout={logout} director={director} updateDirector={updateDirector} notifLog={notifLog} onClearNotifs={clearNotifLog} />
 
             {view === 'home' && <DashboardHome scopeBranches={myBranches} directorData={directorData} opData={opData} centerLabel={director.centerName} allBranches={true} />}
             {view === 'branches' && <BranchesPage director={director} directorData={directorData} opData={opData} openModal={openModal} />}
-            {view === 'managers' && <ManagersPage director={director} directorData={directorData} onImpersonate={impersonateManager} openModal={openModal} />}
+            {view === 'managers' && <ManagersPage director={director} directorData={directorData} openModal={openModal} />}
             {view === 'payments' && <PaymentsPage scopeBranches={myBranches} directorData={directorData} opData={opData} openModal={openModal} />}
             {view === 'teachers' && <TeachersHR scopeBranches={myBranches} directorData={directorData} opData={opData} openModal={openModal} canEdit={true} />}
             {view === 'courses' && <CoursesPage scopeBranches={myBranches} directorData={directorData} opData={opData} openModal={openModal} canEdit={true} />}
             {view === 'holidays' && <HolidaysPage directorId={director.id} directorData={directorData} addHoliday={addHoliday} removeHoliday={removeHoliday} canEdit={true} />}
             {view === 'finance' && <FinancePage role="director" scopeBranchIds={myBranches.map(b => b.id)} directorData={directorData} allBranches={myBranches} addFinance={addFinance} approveFinance={approveFinance} rejectFinance={rejectFinance} />}
-            {view === 'groups' && <GroupsProfitability directorData={directorData} opData={opData} setGroupFee={setGroupFee} scopeBranchIds={null} />}
+            {view === 'groups' && <GroupsPage directorData={directorData} opData={opData} openModal={openModal} scopeBranchIds={null} canEdit={true} />}
+            {view === 'notifications' && <NotificationsPage notifLog={notifLog} onMarkRead={markNotifRead} onMarkAllRead={markAllNotifsRead} onClear={clearNotifLog} />}
             {view === 'settings' && <SettingsPage director={director} updateDirector={updateDirector} />}
           </main>
         </div>
@@ -1833,7 +1914,8 @@ export default function App() {
         {modal?.type === 'managerPermissions' && (() => { const mgr = directorData.managers.find(m => m.id === modal.managerId); return mgr ? <ManagerPermissionsModal manager={mgr} onSave={allowed => updateManagerPermissions(mgr.id, allowed)} onClose={closeModal} /> : null; })()}
         {modal?.type === 'teacherHRForm' && <TeacherHRFormModal editing={modal.editing} branches={myBranches} onSubmit={p => modal.editing ? updateTeacherHR(modal.editing.id, p) : addTeacherHR(p)} onClose={closeModal} />}
         {modal?.type === 'courseForm' && <CourseFormModal editing={modal.editing} branches={myBranches} onSubmit={p => modal.editing ? updateCourse(modal.editing.id, p) : addCourse(p)} onClose={closeModal} />}
-        {modal?.type === 'recordPayment' && <RecordPaymentModal initialStudentId={modal.studentId} initialCourseId={modal.courseId} scopeBranches={myBranches} directorData={directorData} opData={opData} onSubmit={recordPayment} onClose={closeModal} />}
+        {modal?.type === 'groupForm' && <GroupFormModal editing={modal.editing} initialCourseId={modal.courseId} courses={directorData.courses.filter(c => myBranches.some(b => b.id === c.branchId))} groups={opGroups(opData)} rooms={opRooms(opData)} onSubmit={p => modal.editing ? updateGroup(modal.editing.id, p) : addGroup(p)} onClose={closeModal} />}
+        {modal?.type === 'recordPayment' && <RecordPaymentModal initialStudentId={modal.studentId} initialGroupId={modal.groupId} scopeBranches={myBranches} directorData={directorData} opData={opData} onSubmit={recordPayment} onClose={closeModal} />}
         {modal?.type === 'confirm' && <ConfirmModal message={modal.message} onConfirm={handleConfirm} onCancel={closeModal} />}
       </div>
     </ThemeContext.Provider>
