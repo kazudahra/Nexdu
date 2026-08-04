@@ -6,6 +6,7 @@ import {
   TrendingUp, TrendingDown, CheckCircle2, XCircle,
   ClipboardList, Star, BookOpen,
   Pencil, Sun, Moon, Palette, CreditCard, Banknote, AlertTriangle, Percent,
+  Zap, Megaphone, Wrench, MoreHorizontal,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from 'recharts';
 
@@ -34,6 +35,16 @@ const MANAGER_NAV_ALL = [
 ];
 
 const EXPENSE_CATEGORIES = ['Ijara', 'Ish haqi', 'Kommunal', 'Reklama', 'Jihoz', "O'quv materiali", 'Boshqa'];
+const EXPENSE_CATEGORY_ICONS = {
+  'Ijara': Building2,
+  'Ish haqi': Wallet,
+  'Kommunal': Zap,
+  'Reklama': Megaphone,
+  'Jihoz': Wrench,
+  "O'quv materiali": BookOpen,
+  'Boshqa': MoreHorizontal,
+};
+function categoryIcon(category) { return EXPENSE_CATEGORY_ICONS[category] || MoreHorizontal; }
 const PAYMENT_METHODS = [{ id: 'cash', label: 'Naqd', icon: Banknote }, { id: 'card', label: 'Plastik', icon: CreditCard }];
 const GROUP_COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#0ea5e9', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
 function nextGroupColor(groups) { return GROUP_COLORS[groups.length % GROUP_COLORS.length]; }
@@ -89,13 +100,14 @@ function useTheme() { return useContext(ThemeContext); }
 
 /* ============================== STYLE TOKENS ============================== */
 
-const GLASS = "bg-slate-50 backdrop-blur-xl border border-slate-200 shadow-xl shadow-black/10";
-const GLASS_SOFT = "bg-slate-50 backdrop-blur-lg border border-slate-200";
-const INPUT_CLS = "w-full bg-slate-50 backdrop-blur-md border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-slate-100 transition-all text-sm";
+const PAGE_BG_STYLE = { background: 'linear-gradient(160deg, #eef2f9 0%, #e7eefb 45%, #f1eefb 100%)' };
+const GLASS = "bg-white border border-slate-200/80 shadow-lg shadow-slate-900/5";
+const GLASS_SOFT = "bg-white/85 border border-slate-200/70";
+const INPUT_CLS = "w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:bg-white focus:border-blue-300 transition-all text-sm";
 const LABEL_CLS = "block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide";
 const BTN_PRIMARY_BASE = "backdrop-blur-md border border-slate-200 text-white font-medium rounded-xl px-4 py-2.5 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 hover:brightness-110";
-const BTN_GHOST = "bg-slate-50 hover:bg-slate-100 backdrop-blur-md border border-slate-200 text-slate-700 hover:text-slate-900 rounded-xl px-4 py-2 transition-all text-sm flex items-center justify-center gap-2";
-const BTN_ICON = "w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center transition-all text-slate-600 hover:text-slate-900 shrink-0";
+const BTN_GHOST = "bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-blue-700 rounded-xl px-4 py-2 transition-all text-sm flex items-center justify-center gap-2";
+const BTN_ICON = "w-9 h-9 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 flex items-center justify-center transition-all text-slate-600 hover:text-blue-700 shrink-0";
 
 function PrimaryButton({ children, className = '', ...props }) {
   const theme = useTheme();
@@ -222,9 +234,9 @@ function BackgroundBlobs() {
   const theme = useTheme();
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full blur-3xl opacity-30" style={{ background: theme.blob1, animation: 'float1 18s ease-in-out infinite' }} />
-      <div className="absolute top-1/3 -right-32 w-96 h-96 rounded-full blur-3xl opacity-30" style={{ background: theme.blob2, animation: 'float2 22s ease-in-out infinite' }} />
-      <div className="absolute -bottom-32 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-25" style={{ background: theme.blob3, animation: 'float3 20s ease-in-out infinite' }} />
+      <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full blur-3xl opacity-20" style={{ background: theme.blob1, animation: 'float1 18s ease-in-out infinite' }} />
+      <div className="absolute top-1/3 -right-32 w-96 h-96 rounded-full blur-3xl opacity-20" style={{ background: theme.blob2, animation: 'float2 22s ease-in-out infinite' }} />
+      <div className="absolute -bottom-32 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-15" style={{ background: theme.blob3, animation: 'float3 20s ease-in-out infinite' }} />
     </div>
   );
 }
@@ -232,7 +244,7 @@ function BackgroundBlobs() {
 function LoadingScreen() {
   const theme = useTheme();
   return (
-    <div className="min-h-screen w-full flex items-center justify-center text-slate-900" style={{ background: '#fbfcfd' }}>
+    <div className="min-h-screen w-full flex items-center justify-center text-slate-900" style={PAGE_BG_STYLE}>
       <div className="flex flex-col items-center gap-3"><Loader2 size={28} className="animate-spin" /><p className="text-slate-600 text-sm">Yuklanmoqda...</p></div>
     </div>
   );
@@ -264,8 +276,8 @@ function PhoneInput({ value, onChange, autoFocus, onKeyDown }) {
 
 function Modal({ title, onClose, children, wide }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-5 sm:p-6 w-full ${wide ? 'max-w-2xl' : 'max-w-md'} max-h-[85vh] overflow-y-auto`} style={{ background: 'rgba(255,255,255,0.88)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-5 sm:p-6 w-full ${wide ? 'max-w-2xl' : 'max-w-md'} max-h-[85vh] overflow-y-auto`} style={{ background: '#ffffff' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display text-lg font-semibold text-slate-900">{title}</h3>
           <button onClick={onClose} className={BTN_ICON}><X size={18} /></button>
@@ -278,12 +290,12 @@ function Modal({ title, onClose, children, wide }) {
 
 function ConfirmModal({ message, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onCancel}>
-      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-6 w-full max-w-sm`} style={{ background: 'rgba(255,255,255,0.92)' }}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onCancel}>
+      <div onClick={e => e.stopPropagation()} className={`${GLASS} rounded-3xl p-6 w-full max-w-sm`} style={{ background: '#ffffff' }}>
         <p className="text-slate-900 mb-5">{message}</p>
         <div className="flex gap-3">
           <button onClick={onCancel} className={`${BTN_GHOST} flex-1`}>Yo'q, bekor</button>
-          <button onClick={onConfirm} className="flex-1 bg-rose-500/80 hover:bg-rose-500 border border-slate-200 text-white rounded-xl px-4 py-2 text-sm transition-all">Ha, tasdiqlash</button>
+          <button onClick={onConfirm} className="flex-1 bg-rose-500 hover:bg-rose-600 border border-rose-500 text-white rounded-xl px-4 py-2 text-sm transition-all">Ha, tasdiqlash</button>
         </div>
       </div>
     </div>
@@ -309,7 +321,7 @@ function ToastStack({ toasts, onDismiss }) {
 function EmptyState({ icon: Icon, title, subtitle, action }) {
   return (
     <div className={`${GLASS_SOFT} rounded-3xl p-10 flex flex-col items-center text-center gap-3`}>
-      <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center"><Icon size={26} className="text-slate-500" /></div>
+      <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center"><Icon size={26} className="text-blue-500" /></div>
       <p className="text-slate-900 font-medium">{title}</p>
       {subtitle && <p className="text-slate-500 text-sm max-w-sm">{subtitle}</p>}
       {action}
@@ -320,7 +332,7 @@ function EmptyState({ icon: Icon, title, subtitle, action }) {
 function StatCard({ label, value, sub, icon: Icon }) {
   return (
     <div className={`${GLASS} rounded-2xl p-4`}>
-      <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center mb-2">{Icon && <Icon size={16} className="text-slate-600" />}</div>
+      <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-2">{Icon && <Icon size={16} className="text-blue-600" />}</div>
       <p className="font-display text-slate-900 text-xl font-bold truncate">{value}</p>
       <p className="text-slate-500 text-xs mt-0.5">{label}</p>
       {sub && <p className="text-slate-400 text-[11px] mt-0.5">{sub}</p>}
@@ -329,12 +341,12 @@ function StatCard({ label, value, sub, icon: Icon }) {
 }
 
 function StarPicker({ value, onChange, size = 20 }) {
-  return <div className="flex gap-1">{[1, 2, 3, 4, 5].map(s => <button key={s} type="button" onClick={() => onChange(s)}><Star size={size} className={s <= value ? "fill-amber-300 text-amber-300" : "text-slate-400"} /></button>)}</div>;
+  return <div className="flex gap-1">{[1, 2, 3, 4, 5].map(s => <button key={s} type="button" onClick={() => onChange(s)}><Star size={size} className={s <= value ? "fill-amber-400 text-amber-400" : "text-slate-300"} /></button>)}</div>;
 }
 
 function DayPicker({ value, onChange }) {
   function toggle(d) { onChange(value.includes(d) ? value.filter(x => x !== d) : [...value, d]); }
-  return <div className="flex flex-wrap gap-1.5">{WEEK_DAYS.map(d => <button key={d} type="button" onClick={() => toggle(d)} className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${value.includes(d) ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>{d}</button>)}</div>;
+  return <div className="flex flex-wrap gap-1.5">{WEEK_DAYS.map(d => <button key={d} type="button" onClick={() => toggle(d)} className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${value.includes(d) ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>{d}</button>)}</div>;
 }
 
 function ToggleSwitch({ checked, onChange, label, sub }) {
@@ -342,7 +354,7 @@ function ToggleSwitch({ checked, onChange, label, sub }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div><p className="text-slate-900 text-sm">{label}</p>{sub && <p className="text-slate-400 text-xs">{sub}</p>}</div>
-      <button onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-all relative shrink-0 ${checked ? '' : 'bg-slate-50 border border-slate-200'}`} style={checked ? { background: theme.accent1 } : {}}>
+      <button onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-all relative shrink-0 ${checked ? '' : 'bg-slate-100 border border-slate-200'}`} style={checked ? { background: theme.accent1 } : {}}>
         <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${checked ? 'left-6' : 'left-1'}`} />
       </button>
     </div>
@@ -363,9 +375,9 @@ function ThemeSwitcher({ director, updateDirector }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`${GLASS} rounded-2xl p-2 absolute left-0 top-11 z-50 w-48`} style={{ background: 'rgba(255,255,255,0.95)' }}>
+          <div className={`${GLASS} rounded-2xl p-2 absolute left-0 top-11 z-50 w-48`} style={{ background: '#ffffff' }}>
             {allThemes.map(t => (
-              <button key={t.id} onClick={() => { updateDirector({ ...director, themeId: t.id }); setOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${theme.id === t.id ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'}`}>
+              <button key={t.id} onClick={() => { updateDirector({ ...director, themeId: t.id }); setOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all ${theme.id === t.id ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                 <span className="w-4 h-4 rounded-full shrink-0" style={{ background: t.accent1 }} />{t.name}
               </button>
             ))}
@@ -390,7 +402,7 @@ function NotificationBell({ log, onClear }) {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={`${GLASS} rounded-2xl p-2 absolute right-0 top-11 z-50 w-72 max-h-80 overflow-y-auto`} style={{ background: 'rgba(255,255,255,0.95)' }}>
+          <div className={`${GLASS} rounded-2xl p-2 absolute right-0 top-11 z-50 w-72 max-h-80 overflow-y-auto`} style={{ background: '#ffffff' }}>
             <div className="flex items-center justify-between px-2 py-1.5">
               <p className="text-slate-900 text-xs font-medium">Bildirishnomalar</p>
               {log.length > 0 && <button onClick={onClear} className="text-slate-400 hover:text-slate-900 text-[11px]">Tozalash</button>}
@@ -472,17 +484,17 @@ function ManagerAuth({ directorData, onLoginManager }) {
   const theme = useTheme();
 
   return (
-    <div className="min-h-screen w-full text-slate-900 relative flex" style={{ background: '#fbfcfd', fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+    <div className="min-h-screen w-full text-slate-900 relative flex" style={{ ...PAGE_BG_STYLE, fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
       <GlobalStyleTag />
       <BackgroundBlobs />
       <div className="hidden lg:flex flex-1 flex-col justify-center px-16 relative z-10">
-        <p className="text-5xl mb-4">\ud83c\udfe2</p>
+        <p className="text-5xl mb-4">🏢</p>
         <h1 className="font-display text-4xl font-bold mb-3 leading-tight">Kunlik ishni<br />bir joydan yuriting</h1>
         <p className="text-slate-500 text-base max-w-md">O'quvchi qabuli, guruhlar, to'lovlar va moliya so'rovlari — direktor sizga biriktirgan filial(lar) doirasida.</p>
       </div>
       <div className="flex-1 flex items-center justify-center p-4 relative z-10">
-        <div className={`${GLASS} rounded-3xl p-6 sm:p-8 w-full max-w-sm`} style={{ background: 'rgba(255,255,255,0.85)' }}>
-          <div className="text-center mb-6"><p className="text-3xl mb-2">\ud83c\udfe2</p><h1 className="font-display text-xl font-bold">Menejer Panel</h1></div>
+        <div className={`${GLASS} rounded-3xl p-6 sm:p-8 w-full max-w-sm`} style={{ background: '#ffffff' }}>
+          <div className="text-center mb-6"><p className="text-3xl mb-2">🏢</p><h1 className="font-display text-xl font-bold">Menejer Panel</h1></div>
           <div className="space-y-3">
             <div><label className={LABEL_CLS}>Telefon raqam</label><PhoneInput value={phone} onChange={setPhone} autoFocus /></div>
             <div className="relative">
@@ -490,7 +502,7 @@ function ManagerAuth({ directorData, onLoginManager }) {
               <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} className={INPUT_CLS} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
               <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-[34px] text-slate-500 hover:text-slate-900">{showPw ? <EyeOff size={16} /> : <Eye size={16} />}</button>
             </div>
-            {error && <p className="text-rose-300 text-xs">{error}</p>}
+            {error && <p className="text-rose-500 text-xs">{error}</p>}
             <PrimaryButton onClick={handleLogin} disabled={busy} className="w-full">{busy ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />} Kirish</PrimaryButton>
             <p className="text-slate-400 text-[11px] text-center pt-1">Hisobingiz yo'qmi? Direktoringizdan menejer sifatida qo'shilishingizni so'rang.</p>
           </div>
@@ -567,8 +579,8 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
         <div><h2 className="font-display text-2xl font-bold text-slate-900">Bosh sahifa</h2><p className="text-slate-500 text-sm mt-0.5">{centerLabel} — {MONTHS_UZ[thisMonth]} {thisYear}</p></div>
         {allBranches && scopeBranches.length > 1 && (
           <select value={branchId} onChange={e => setBranchId(e.target.value)} className={`${INPUT_CLS} w-auto`}>
-            <option value="all" className="bg-violet-950">Barcha filiallar</option>
-            {scopeBranches.map(b => <option key={b.id} value={b.id} className="bg-violet-950">{b.name}</option>)}
+            <option value="all">Barcha filiallar</option>
+            {scopeBranches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
         )}
       </div>
@@ -590,13 +602,13 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
           <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer>
               <LineChart data={monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.4)" fontSize={11} tickFormatter={v => (v / 1000000).toFixed(1) + 'M'} />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, color: 'white' }} formatter={v => money(v) + " so'm"} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.08)" />
+                <XAxis dataKey="name" stroke="rgba(15,23,42,0.4)" fontSize={11} />
+                <YAxis stroke="rgba(15,23,42,0.4)" fontSize={11} tickFormatter={v => (v / 1000000).toFixed(1) + 'M'} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, color: '#0f172a' }} formatter={v => money(v) + " so'm"} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line type="monotone" dataKey="Kirim" stroke="#34d399" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Chiqim" stroke="#fb7185" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Kirim" stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Chiqim" stroke="#f43f5e" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -611,7 +623,7 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
                   <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name }) => name}>
                     {pieData.map((entry, i) => <Cell key={entry.name} fill={pieColors[i % pieColors.length]} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, color: 'white' }} formatter={v => money(v) + " so'm"} />
+                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, color: '#0f172a' }} formatter={v => money(v) + " so'm"} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -627,7 +639,7 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
                   <Pie data={paymentMethodData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} label={({ name, value }) => `${name}: ${(value / 1000).toFixed(0)}k`}>
                     <Cell fill="#10b981" /><Cell fill="#0ea5e9" />
                   </Pie>
-                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, color: 'white' }} formatter={v => money(v) + " so'm"} />
+                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, color: '#0f172a' }} formatter={v => money(v) + " so'm"} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -640,11 +652,11 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
             <div style={{ width: '100%', height: 200 }}>
               <ResponsiveContainer>
                 <BarChart data={teacherRatingData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                  <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={10} />
-                  <YAxis stroke="rgba(255,255,255,0.4)" fontSize={11} domain={[0, 5]} />
-                  <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, color: 'white' }} />
-                  <Bar dataKey="Baho" fill="#fbbf24" radius={[6, 6, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.08)" />
+                  <XAxis dataKey="name" stroke="rgba(15,23,42,0.4)" fontSize={10} />
+                  <YAxis stroke="rgba(15,23,42,0.4)" fontSize={11} domain={[0, 5]} />
+                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, color: '#0f172a' }} />
+                  <Bar dataKey="Baho" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -653,15 +665,15 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
       </div>
 
       <div className={`${GLASS} rounded-3xl p-5`}>
-        <h3 className="font-display text-slate-900 font-semibold mb-4 flex items-center gap-2"><Sparkles size={16} className="text-amber-300" /> Kurslar bo'yicha o'quvchilar soni va daromad</h3>
+        <h3 className="font-display text-slate-900 font-semibold mb-4 flex items-center gap-2"><Sparkles size={16} className="text-amber-500" /> Kurslar bo'yicha o'quvchilar soni va daromad</h3>
         {courseRevenue.length === 0 ? <p className="text-slate-400 text-sm py-6 text-center">Hali kurs yo'q — "Kurslar" bo'limidan qo'shing.</p> : (
           <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer>
               <BarChart data={courseRevenue} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" horizontal={false} />
-                <XAxis type="number" stroke="rgba(255,255,255,0.4)" fontSize={11} tickFormatter={v => (v / 1000000).toFixed(1) + 'M'} />
-                <YAxis type="category" dataKey="name" stroke="rgba(255,255,255,0.6)" fontSize={11} width={100} />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, color: 'white' }} formatter={v => money(v) + " so'm"} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.08)" horizontal={false} />
+                <XAxis type="number" stroke="rgba(15,23,42,0.4)" fontSize={11} tickFormatter={v => (v / 1000000).toFixed(1) + 'M'} />
+                <YAxis type="category" dataKey="name" stroke="rgba(15,23,42,0.6)" fontSize={11} width={100} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, color: '#0f172a' }} formatter={v => money(v) + " so'm"} />
                 <Bar dataKey="Daromad" fill={theme.accent1} radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -675,10 +687,10 @@ function DashboardHome({ scopeBranches, directorData, opData, centerLabel, allBr
           <div style={{ width: '100%', height: 220 }}>
             <ResponsiveContainer>
               <BarChart data={branchCompareData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={11} />
-                <YAxis stroke="rgba(255,255,255,0.4)" fontSize={11} tickFormatter={v => (v / 1000000).toFixed(1) + 'M'} />
-                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 12, color: 'white' }} formatter={v => money(v) + " so'm"} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.08)" />
+                <XAxis dataKey="name" stroke="rgba(15,23,42,0.4)" fontSize={11} />
+                <YAxis stroke="rgba(15,23,42,0.4)" fontSize={11} tickFormatter={v => (v / 1000000).toFixed(1) + 'M'} />
+                <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 12, color: '#0f172a' }} formatter={v => money(v) + " so'm"} />
                 <Bar dataKey="Foyda" fill={theme.accent2} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -723,7 +735,7 @@ function TeachersHR({ scopeBranches, directorData, opData, openModal, canEdit })
                     <p className="text-slate-900 text-sm font-medium truncate">{t.name}</p>
                     <p className="text-slate-400 text-xs truncate">{branch?.name} · {displayPhone(t.phone)}</p>
                   </div>
-                  <div className="flex items-center gap-0.5">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={11} className={s <= (t.rating || 0) ? "fill-amber-300 text-amber-300" : "text-slate-300"} />)}</div>
+                  <div className="flex items-center gap-0.5">{[1, 2, 3, 4, 5].map(s => <Star key={s} size={11} className={s <= (t.rating || 0) ? "fill-amber-400 text-amber-400" : "text-slate-300"} />)}</div>
                   <button onClick={() => openModal({ type: 'teacherPayroll', teacherId: t.id })} className={BTN_GHOST}><Wallet size={13} /> Maosh</button>
                   {canEdit && <button onClick={() => openModal({ type: 'teacherHRForm', editing: t })} className={BTN_ICON}><Pencil size={14} /></button>}
                   {canEdit && <button onClick={() => openModal({ type: 'confirm', message: `${t.name}ni ro'yxatdan o'chirasizmi?`, action: { kind: 'deleteTeacherHR', teacherHRId: t.id } })} className={BTN_ICON}><Trash2 size={14} /></button>}
@@ -731,12 +743,12 @@ function TeachersHR({ scopeBranches, directorData, opData, openModal, canEdit })
                 <div className="grid grid-cols-4 gap-2 pt-2 border-t border-slate-200">
                   <div><p className="text-slate-900 text-sm font-bold flex items-center gap-1">{t.salaryType === 'fixed' ? <Wallet size={12} /> : <Percent size={12} />}{t.salaryType === 'fixed' ? 'Belgilangan' : `${t.revenueSharePercent || 0}%`}</p><p className="text-slate-400 text-[10px]">Kelishuv</p></div>
                   <div><p className="text-slate-900 text-sm font-bold">{activeStudents}</p><p className="text-slate-400 text-[10px]">Faol o'quvchi</p></div>
-                  <div><p className="text-emerald-300 text-sm font-bold">{money(stats.expectedPay)}</p><p className="text-slate-400 text-[10px]">Oylik haqi</p></div>
-                  <div><p className="text-amber-300 text-sm font-bold">{money(stats.remaining)}</p><p className="text-slate-400 text-[10px]">Qolgan haq</p></div>
+                  <div><p className="text-emerald-600 text-sm font-bold">{money(stats.expectedPay)}</p><p className="text-slate-400 text-[10px]">Oylik haqi</p></div>
+                  <div><p className="text-amber-600 text-sm font-bold">{money(stats.remaining)}</p><p className="text-slate-400 text-[10px]">Qolgan haq</p></div>
                 </div>
                 <div className="flex gap-2 text-[10px] text-slate-400">
-                  {t.canCreateGroups === false && <span className="bg-slate-50 px-2 py-0.5 rounded-full">Guruh ochish taqiqlangan</span>}
-                  {t.canReceivePayments === false && <span className="bg-slate-50 px-2 py-0.5 rounded-full">To'lov qabul qila olmaydi</span>}
+                  {t.canCreateGroups === false && <span className="bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">Guruh ochish taqiqlangan</span>}
+                  {t.canReceivePayments === false && <span className="bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">To'lov qabul qila olmaydi</span>}
                 </div>
               </div>
             );
@@ -772,7 +784,7 @@ function HolidaysPage({ directorId, directorData, addHoliday, removeHoliday, can
         <div className="space-y-2">
           {holidays.map(h => (
             <div key={h.id} className={`${GLASS_SOFT} rounded-2xl p-4 flex items-center justify-between gap-3`}>
-              <div className="flex items-center gap-3"><PartyPopper size={18} className="text-amber-300 shrink-0" /><div><p className="text-slate-900 text-sm font-medium">{h.name}</p><p className="text-slate-400 text-xs">{formatDate(h.date)}{h.note ? ` · ${h.note}` : ''}</p></div></div>
+              <div className="flex items-center gap-3"><PartyPopper size={18} className="text-amber-500 shrink-0" /><div><p className="text-slate-900 text-sm font-medium">{h.name}</p><p className="text-slate-400 text-xs">{formatDate(h.date)}{h.note ? ` · ${h.note}` : ''}</p></div></div>
               {canEdit && <button onClick={() => removeHoliday(h.id)} className={BTN_ICON}><X size={14} /></button>}
             </div>
           ))}
@@ -802,6 +814,12 @@ function FinancePage({ role, scopeBranchIds, directorData, allBranches, addFinan
   const totalIncome = relevant.filter(f => f.type === 'income' && f.status === 'approved').reduce((s, f) => s + f.amount, 0);
   const totalExpense = relevant.filter(f => f.type === 'expense' && f.status === 'approved').reduce((s, f) => s + f.amount, 0);
 
+  // Per-category breakdown for icon-labelled group summary
+  const categoryTotals = EXPENSE_CATEGORIES.map(cat => ({
+    category: cat,
+    total: relevant.filter(f => f.type === 'expense' && f.status === 'approved' && f.category === cat).reduce((s, f) => s + f.amount, 0),
+  })).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
+
   function submit() {
     setError('');
     const amt = parseFloat(amount);
@@ -823,23 +841,48 @@ function FinancePage({ role, scopeBranchIds, directorData, allBranches, addFinan
         <StatCard icon={TrendingDown} label="Jami xarajat" value={money(totalExpense) + " so'm"} />
       </div>
 
+      {categoryTotals.length > 0 && (
+        <div className={`${GLASS} rounded-3xl p-5`}>
+          <h3 className="font-display text-slate-900 font-semibold mb-3">Xarajat turlari bo'yicha (guruhlar)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {categoryTotals.map(({ category: cat, total }) => {
+              const Icon = categoryIcon(cat);
+              const pct = totalExpense > 0 ? Math.round((total / totalExpense) * 100) : 0;
+              return (
+                <div key={cat} className="flex items-center gap-3 bg-blue-50/60 border border-blue-100 rounded-2xl p-3.5">
+                  <span className="w-10 h-10 rounded-xl bg-white border border-blue-100 flex items-center justify-center shrink-0"><Icon size={18} className="text-blue-600" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-slate-900 text-sm font-medium truncate">{cat}</p>
+                    <p className="text-slate-400 text-xs">{pct}% jami xarajatdan</p>
+                  </div>
+                  <p className="text-slate-900 text-sm font-semibold shrink-0">{money(total)} so'm</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {showForm && (
         <div className={`${GLASS} rounded-3xl p-5 space-y-3`}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {scopedBranches.length > 1 && (<div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{scopedBranches.map(b => <option key={b.id} value={b.id} className="bg-violet-950">{b.name}</option>)}</select></div>)}
+            {scopedBranches.length > 1 && (<div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{scopedBranches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>)}
             <div><label className={LABEL_CLS}>Summa (so'm)</label><input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" className={INPUT_CLS} /></div>
-            <div><label className={LABEL_CLS}>Kategoriya</label><select value={category} onChange={e => setCategory(e.target.value)} className={INPUT_CLS}>{EXPENSE_CATEGORIES.map(c => <option key={c} value={c} className="bg-violet-950">{c}</option>)}</select></div>
+            <div>
+              <label className={LABEL_CLS}>Kategoriya</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className={INPUT_CLS}>{EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
+            </div>
             <div><label className={LABEL_CLS}>Sana</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className={INPUT_CLS} /></div>
             <div className="sm:col-span-2"><label className={LABEL_CLS}>Izoh</label><input value={note} onChange={e => setNote(e.target.value)} className={INPUT_CLS} /></div>
           </div>
           <div>
             <label className={LABEL_CLS}>Tasdiqlash turi</label>
             <div className="flex gap-2">
-              <button onClick={() => setApprovalMode('manager')} className={`flex-1 text-xs py-2 rounded-xl border transition-all ${approvalMode === 'manager' ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>Menejer ruhsati (darhol)</button>
-              <button onClick={() => setApprovalMode('director')} className={`flex-1 text-xs py-2 rounded-xl border transition-all ${approvalMode === 'director' ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>Direktor tasdiqlashi kerak</button>
+              <button onClick={() => setApprovalMode('manager')} className={`flex-1 text-xs py-2 rounded-xl border transition-all ${approvalMode === 'manager' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>Menejer ruhsati (darhol)</button>
+              <button onClick={() => setApprovalMode('director')} className={`flex-1 text-xs py-2 rounded-xl border transition-all ${approvalMode === 'director' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>Direktor tasdiqlashi kerak</button>
             </div>
           </div>
-          {error && <p className="text-rose-300 text-xs">{error}</p>}
+          {error && <p className="text-rose-500 text-xs">{error}</p>}
           <PrimaryButton onClick={submit} className="w-full"><Check size={15} /> Saqlash</PrimaryButton>
         </div>
       )}
@@ -850,12 +893,16 @@ function FinancePage({ role, scopeBranchIds, directorData, allBranches, addFinan
           <div className="space-y-2">
             {pending.map(f => {
               const b = directorData.branches.find(x => x.id === f.branchId);
+              const Icon = categoryIcon(f.category);
               return (
                 <div key={f.id} className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
-                  <div className="min-w-0"><p className="text-slate-900 text-sm font-medium">{f.category} — {money(f.amount)} so'm</p><p className="text-slate-400 text-xs truncate">{b?.name} · {formatDate(f.date)}{f.note ? ` · ${f.note}` : ''}</p></div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shrink-0"><Icon size={16} className="text-slate-600" /></span>
+                    <div className="min-w-0"><p className="text-slate-900 text-sm font-medium">{f.category} — {money(f.amount)} so'm</p><p className="text-slate-400 text-xs truncate">{b?.name} · {formatDate(f.date)}{f.note ? ` · ${f.note}` : ''}</p></div>
+                  </div>
                   <div className="flex gap-1.5 shrink-0">
-                    <button onClick={() => approveFinance(f.id)} className="w-9 h-9 rounded-xl bg-emerald-400/20 hover:bg-emerald-400/30 border border-emerald-300/40 flex items-center justify-center text-emerald-700"><CheckCircle2 size={16} /></button>
-                    <button onClick={() => rejectFinance(f.id)} className="w-9 h-9 rounded-xl bg-rose-400/20 hover:bg-rose-400/30 border border-rose-300/40 flex items-center justify-center text-rose-700"><XCircle size={16} /></button>
+                    <button onClick={() => approveFinance(f.id)} className="w-9 h-9 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700"><CheckCircle2 size={16} /></button>
+                    <button onClick={() => rejectFinance(f.id)} className="w-9 h-9 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-700"><XCircle size={16} /></button>
                   </div>
                 </div>
               );
@@ -868,12 +915,18 @@ function FinancePage({ role, scopeBranchIds, directorData, allBranches, addFinan
         <h3 className="font-display text-slate-900 font-semibold mb-3">So'nggi yozuvlar</h3>
         {history.length === 0 ? <p className="text-slate-400 text-sm">Hali yozuv yo'q.</p> : (
           <div className="space-y-2">
-            {history.map(f => (
-              <div key={f.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <div className="min-w-0"><p className="text-slate-900 text-sm truncate">{f.category}{f.note ? ` · ${f.note}` : ''}</p><p className="text-slate-400 text-xs">{formatDate(f.date)}</p></div>
-                <p className={`text-sm font-semibold shrink-0 ${f.type === 'income' ? 'text-emerald-300' : 'text-rose-300'}`}>{f.type === 'income' ? '+' : '-'}{money(f.amount)}</p>
-              </div>
-            ))}
+            {history.map(f => {
+              const Icon = f.type === 'expense' ? categoryIcon(f.category) : TrendingUp;
+              return (
+                <div key={f.id} className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${f.type === 'income' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-200 text-slate-600'}`}><Icon size={14} /></span>
+                    <div className="min-w-0"><p className="text-slate-900 text-sm truncate">{f.category}{f.note ? ` · ${f.note}` : ''}</p><p className="text-slate-400 text-xs">{formatDate(f.date)}</p></div>
+                  </div>
+                  <p className={`text-sm font-semibold shrink-0 ${f.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>{f.type === 'income' ? '+' : '-'}{money(f.amount)}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -924,8 +977,8 @@ function PaymentsPage({ scopeBranches, directorData, opData, openModal }) {
 
       <div className="flex gap-2 flex-wrap">
         <select value={groupFilter} onChange={e => setGroupFilter(e.target.value)} className={`${INPUT_CLS} w-auto`}>
-          <option value="all" className="bg-violet-950">Barcha guruhlar</option>
-          {groups.map(g => <option key={g.id} value={g.id} className="bg-violet-950">{g.name}</option>)}
+          <option value="all">Barcha guruhlar</option>
+          {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Ism yoki telefon bo'yicha qidirish..." className={`${INPUT_CLS} flex-1 min-w-[200px]`} />
       </div>
@@ -948,11 +1001,11 @@ function PaymentsPage({ scopeBranches, directorData, opData, openModal }) {
                   <p className="text-slate-900 text-sm font-medium truncate">{student.name}</p>
                   <p className="text-slate-400 text-xs truncate">{group.name}{course ? ` · ${course.name}` : ''}</p>
                   <div className="flex gap-1.5 mt-1 flex-wrap">
-                    {status === 'paid' && <span className="text-[10px] bg-emerald-400/20 border border-emerald-300/40 text-emerald-700 px-2 py-0.5 rounded-full">To'landi</span>}
-                    {status === 'partial' && <span className="text-[10px] bg-amber-400/20 border border-amber-300/40 text-amber-700 px-2 py-0.5 rounded-full">Qisman: {money(paidThis)}/{money(price)}</span>}
-                    {status === 'unpaid' && <span className="text-[10px] bg-rose-400/20 border border-rose-300/40 text-rose-700 px-2 py-0.5 rounded-full">To'lanmagan</span>}
-                    {hasDebt && <span className="text-[10px] bg-rose-500/30 border border-rose-400/50 text-rose-700 px-2 py-0.5 rounded-full">O'tgan oydan qarz</span>}
-                    {overdue && <span className="text-[10px] bg-red-500/40 border border-red-400/60 text-white px-2 py-0.5 rounded-full flex items-center gap-1"><AlertTriangle size={10} /> Muddati o'tgan</span>}
+                    {status === 'paid' && <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 px-2 py-0.5 rounded-full">To'landi</span>}
+                    {status === 'partial' && <span className="text-[10px] bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded-full">Qisman: {money(paidThis)}/{money(price)}</span>}
+                    {status === 'unpaid' && <span className="text-[10px] bg-rose-50 border border-rose-200 text-rose-700 px-2 py-0.5 rounded-full">To'lanmagan</span>}
+                    {hasDebt && <span className="text-[10px] bg-rose-100 border border-rose-300 text-rose-700 px-2 py-0.5 rounded-full">O'tgan oydan qarz</span>}
+                    {overdue && <span className="text-[10px] bg-red-500 border border-red-500 text-white px-2 py-0.5 rounded-full flex items-center gap-1"><AlertTriangle size={10} /> Muddati o'tgan</span>}
                   </div>
                 </div>
                 {status !== 'paid' && <p className="text-slate-500 text-xs shrink-0">Kutilmoqda: {money(price - paidThis)} so'm</p>}
@@ -1010,7 +1063,7 @@ function RecordPaymentModal({ initialStudentId, initialGroupId, scopeBranches, d
           {matches.length > 0 && (
             <div className="mt-1.5 space-y-1 max-h-40 overflow-y-auto">
               {matches.map(s => (
-                <button key={s.id} onClick={() => selectStudent(s)} className="w-full flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl p-2 text-left transition-colors">
+                <button key={s.id} onClick={() => selectStudent(s)} className="w-full flex items-center gap-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 rounded-xl p-2 text-left transition-colors">
                   <Avatar name={s.name} size={28} /><p className="text-slate-900 text-sm truncate">{s.name}</p>
                 </button>
               ))}
@@ -1022,8 +1075,8 @@ function RecordPaymentModal({ initialStudentId, initialGroupId, scopeBranches, d
           <div>
             <label className={LABEL_CLS}>Guruh / kurs</label>
             <select value={groupId} onChange={e => setGroupId(e.target.value)} className={INPUT_CLS}>
-              <option value="" className="bg-violet-950">— Tanlang —</option>
-              {studentGroupOptions.map(({ group, course }) => <option key={group.id} value={group.id} className="bg-violet-950">{group.name}{course ? ` — ${course.name}` : ''} ({money(group.price || 0)} so'm)</option>)}
+              <option value="">— Tanlang —</option>
+              {studentGroupOptions.map(({ group, course }) => <option key={group.id} value={group.id}>{group.name}{course ? ` — ${course.name}` : ''} ({money(group.price || 0)} so'm)</option>)}
             </select>
           </div>
         )}
@@ -1034,14 +1087,14 @@ function RecordPaymentModal({ initialStudentId, initialGroupId, scopeBranches, d
           <label className={LABEL_CLS}>To'lov turi</label>
           <div className="flex gap-2">
             {PAYMENT_METHODS.map(m => (
-              <button key={m.id} onClick={() => setMethod(m.id)} className={`flex-1 flex items-center justify-center gap-2 text-sm py-2.5 rounded-xl border transition-all ${method === m.id ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+              <button key={m.id} onClick={() => setMethod(m.id)} className={`flex-1 flex items-center justify-center gap-2 text-sm py-2.5 rounded-xl border transition-all ${method === m.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                 <m.icon size={15} /> {m.label}
               </button>
             ))}
           </div>
         </div>
 
-        {error && <p className="text-rose-300 text-xs">{error}</p>}
+        {error && <p className="text-rose-500 text-xs">{error}</p>}
         <PrimaryButton onClick={submit} className="w-full"><Check size={16} /> To'lovni saqlash</PrimaryButton>
       </div>
     </Modal>
@@ -1109,7 +1162,7 @@ function CoursesPage({ scopeBranches, directorData, opData, openModal, canEdit }
                         </div>
                       );
                     })}
-                    {canEdit && <button onClick={() => openModal({ type: 'confirm', message: `"${c.name}" kursini o'chirasizmi?`, action: { kind: 'deleteCourse', courseId: c.id } })} className={`${BTN_GHOST} w-full mt-2 text-rose-700 hover:text-rose-700`}><Trash2 size={14} /> Kursni o'chirish</button>}
+                    {canEdit && <button onClick={() => openModal({ type: 'confirm', message: `"${c.name}" kursini o'chirasizmi?`, action: { kind: 'deleteCourse', courseId: c.id } })} className={`${BTN_GHOST} w-full mt-2 text-rose-600 hover:text-rose-700`}><Trash2 size={14} /> Kursni o'chirish</button>}
                   </div>
                 )}
               </div>
@@ -1154,8 +1207,8 @@ function GroupsPage({ directorData, opData, openModal, scopeBranchIds, canEdit }
               </div>
               <div className="text-right shrink-0 min-w-[110px]">
                 <p className="text-slate-900 text-sm font-semibold">{money(g.revenue)} so'm</p>
-                {g.count < 3 && <p className="text-amber-300 text-[11px]">Kam sonli — yopish mumkin</p>}
-                {i === 0 && g.revenue > 0 && <p className="text-emerald-300 text-[11px]">Asosiy foyda manbai</p>}
+                {g.count < 3 && <p className="text-amber-600 text-[11px]">Kam sonli — yopish mumkin</p>}
+                {i === 0 && g.revenue > 0 && <p className="text-emerald-600 text-[11px]">Asosiy foyda manbai</p>}
               </div>
               {canEdit && <button onClick={() => openModal({ type: 'groupForm', courseId: g.courseId, editing: g })} className={BTN_ICON}><Pencil size={14} /></button>}
               {canEdit && <button onClick={() => openModal({ type: 'confirm', message: `"${g.name}" guruhini o'chirasizmi?`, action: { kind: 'deleteGroup', groupId: g.id } })} className={BTN_ICON}><Trash2 size={14} /></button>}
@@ -1174,7 +1227,7 @@ function AppSidebar({ view, goTo, items, title }) {
     <aside className="hidden md:flex flex-col w-60 shrink-0 p-5 gap-1">
       <div className={`${GLASS} rounded-3xl p-4 mb-4`}><p className="font-display text-slate-900 font-bold text-lg tracking-tight truncate">{title}</p></div>
       <div className={`${GLASS} rounded-3xl p-2 flex flex-col gap-1 flex-1 overflow-y-auto`}>
-        {items.map(item => <button key={item.id} onClick={() => goTo(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${view === item.id ? 'bg-slate-100 text-slate-900 shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}><item.icon size={18} /> {item.label}</button>)}
+        {items.map(item => <button key={item.id} onClick={() => goTo(item.id)} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${view === item.id ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}><item.icon size={18} /> {item.label}</button>)}
       </div>
     </aside>
   );
@@ -1182,8 +1235,8 @@ function AppSidebar({ view, goTo, items, title }) {
 
 function AppBottomNav({ view, goTo, items }) {
   return (
-    <nav className={`md:hidden fixed bottom-3 left-3 right-3 ${GLASS} rounded-3xl p-1.5 flex gap-1 overflow-x-auto z-40`}>
-      {items.map(item => <button key={item.id} onClick={() => goTo(item.id)} className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl transition-all shrink-0 ${view === item.id ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}><item.icon size={17} /><span className="text-[8px] font-medium whitespace-nowrap">{item.label}</span></button>)}
+    <nav className={`md:hidden fixed bottom-3 left-3 right-3 ${GLASS} rounded-3xl p-1.5 flex gap-1 overflow-x-auto z-40`} style={{ background: '#ffffff' }}>
+      {items.map(item => <button key={item.id} onClick={() => goTo(item.id)} className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl transition-all shrink-0 ${view === item.id ? 'bg-blue-50 text-blue-700' : 'text-slate-500'}`}><item.icon size={17} /><span className="text-[8px] font-medium whitespace-nowrap">{item.label}</span></button>)}
     </nav>
   );
 }
@@ -1233,13 +1286,13 @@ function RoomsPage({ opData, openModal, canEdit }) {
             return (
               <div key={r.id} className={`${GLASS} rounded-2xl p-4 space-y-3`}>
                 <div className="flex items-start gap-3">
-                  <span className="w-10 h-10 rounded-xl bg-slate-50 grid place-items-center shrink-0"><Home size={18} /></span>
+                  <span className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 grid place-items-center shrink-0"><Home size={18} className="text-blue-600" /></span>
                   <div className="min-w-0 flex-1">
                     <p className="text-slate-900 font-medium truncate">{r.name}</p>
                     <p className="text-slate-400 text-xs">O'quv xonasi</p>
                   </div>
                 </div>
-                <span className="inline-block text-xs bg-emerald-400/15 border border-emerald-300/30 text-emerald-700 px-2.5 py-1 rounded-full"><Users size={11} className="inline -mt-0.5 mr-1" />{r.capacity || 0} ta sig'im</span>
+                <span className="inline-block text-xs bg-emerald-50 border border-emerald-200 text-emerald-700 px-2.5 py-1 rounded-full"><Users size={11} className="inline -mt-0.5 mr-1" />{r.capacity || 0} ta sig'im</span>
                 {usedByGroups.length > 0 && <p className="text-slate-400 text-[11px]">{usedByGroups.length} ta guruhda band</p>}
                 {canEdit && (
                   <div className="flex gap-2 pt-1">
@@ -1270,7 +1323,7 @@ function RoomFormModal({ editing, onSubmit, onClose }) {
       <div className="space-y-4">
         <div><label className={LABEL_CLS}>Xona nomi</label><input value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} placeholder="Masalan: 7-xona" autoFocus /></div>
         <div><label className={LABEL_CLS}>Sig'imi (o'rin soni)</label><input type="number" min="0" value={capacity} onChange={e => setCapacity(e.target.value)} className={INPUT_CLS} placeholder="25" /></div>
-        {error && <p className="text-rose-300 text-xs">{error}</p>}
+        {error && <p className="text-rose-500 text-xs">{error}</p>}
         <PrimaryButton onClick={submit} className="w-full">{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Saqlash' : "Qo'shish"}</PrimaryButton>
       </div>
     </Modal>
@@ -1280,10 +1333,10 @@ function RoomFormModal({ editing, onSubmit, onClose }) {
 /* ============================== ATTENDANCE (DAVOMAT) ============================== */
 
 const ATTENDANCE_STATUSES = [
-  { id: 'present', label: 'Bor', dot: 'bg-emerald-400' },
-  { id: 'late', label: 'Kech', dot: 'bg-amber-400' },
-  { id: 'excused', label: 'Sababli', dot: 'bg-sky-400' },
-  { id: 'absent', label: "Yo'q", dot: 'bg-rose-400' },
+  { id: 'present', label: 'Bor', dot: 'bg-emerald-500' },
+  { id: 'late', label: 'Kech', dot: 'bg-amber-500' },
+  { id: 'excused', label: 'Sababli', dot: 'bg-sky-500' },
+  { id: 'absent', label: "Yo'q", dot: 'bg-rose-500' },
 ];
 
 function AttendancePage({ directorData, opData, scopeBranchIds, openModal }) {
@@ -1300,8 +1353,8 @@ function AttendancePage({ directorData, opData, scopeBranchIds, openModal }) {
       <div><h2 className="font-display text-2xl font-bold text-slate-900">Davomat</h2><p className="text-slate-500 text-sm mt-0.5">Barcha guruhlar bo'yicha davomat yozuvlari</p></div>
 
       <select value={groupFilter} onChange={e => setGroupFilter(e.target.value)} className={`${INPUT_CLS} w-auto`}>
-        <option value="all" className="bg-violet-950">Barcha guruhlar</option>
-        {groups.map(g => <option key={g.id} value={g.id} className="bg-violet-950">{g.name}</option>)}
+        <option value="all">Barcha guruhlar</option>
+        {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
       </select>
 
       {records.length === 0 ? (
@@ -1321,10 +1374,10 @@ function AttendancePage({ directorData, opData, scopeBranchIds, openModal }) {
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <p className="text-slate-900 font-medium text-sm">{group.name}</p>
-                    <p className="text-slate-400 text-xs">{formatDate(rec.date)} {rec.locked && <span className="ml-1.5 text-emerald-300">· qulflangan</span>}</p>
+                    <p className="text-slate-400 text-xs">{formatDate(rec.date)} {rec.locked && <span className="ml-1.5 text-emerald-600">· qulflangan</span>}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs bg-slate-50 px-2.5 py-1 rounded-full text-slate-600">{pct}% davomat</span>
+                    <span className="text-xs bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full text-blue-700">{pct}% davomat</span>
                     <button onClick={() => openModal({ type: 'editAttendance', recordId: rec.id, groupId: group.id })} className={BTN_ICON}><Pencil size={14} /></button>
                     <button onClick={() => openModal({ type: 'confirm', message: `${formatDate(rec.date)} sanasidagi "${group.name}" davomatini o'chirasizmi?`, action: { kind: 'deleteAttendance', recordId: rec.id } })} className={BTN_ICON}><Trash2 size={14} /></button>
                   </div>
@@ -1366,7 +1419,7 @@ function EditAttendanceModal({ record, group, opData, onSave, onClose }) {
               <p className="text-slate-900 text-sm flex-1 truncate">{s.name}</p>
               <div className="flex gap-1.5 flex-wrap">
                 {ATTENDANCE_STATUSES.map(st => (
-                  <button key={st.id} onClick={() => setStatus(s.id, st.id)} className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${entries[s.id]?.status === st.id ? 'bg-slate-100 border-slate-200 text-slate-900' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>{st.label}</button>
+                  <button key={st.id} onClick={() => setStatus(s.id, st.id)} className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${entries[s.id]?.status === st.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>{st.label}</button>
                 ))}
               </div>
             </div>
@@ -1415,7 +1468,7 @@ function NotificationsPage({ notifLog, onMarkRead, onMarkAllRead, onClear }) {
       <div className="flex gap-2 flex-wrap items-center">
         <div className="flex gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1">
           {[['all', 'Barchasi'], ['unread', "O'qilmagan"], ['read', "O'qilgan"]].map(([id, label]) => (
-            <button key={id} onClick={() => setFilter(id)} className={`text-xs px-3 py-1.5 rounded-lg transition-all ${filter === id ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}>{label}</button>
+            <button key={id} onClick={() => setFilter(id)} className={`text-xs px-3 py-1.5 rounded-lg transition-all ${filter === id ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500'}`}>{label}</button>
           ))}
         </div>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Bildirishnomalarni qidirish..." className={`${INPUT_CLS} flex-1 min-w-[200px]`} />
@@ -1426,8 +1479,8 @@ function NotificationsPage({ notifLog, onMarkRead, onMarkAllRead, onClear }) {
       ) : (
         <div className="space-y-2">
           {filtered.map(n => (
-            <button key={n.id} onClick={() => !n.read && onMarkRead(n.id)} className={`${GLASS} w-full text-left rounded-2xl p-4 flex items-start gap-3 transition-all ${n.read ? 'opacity-60' : 'hover:bg-slate-50'}`}>
-              <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-slate-100' : 'bg-sky-400'}`} />
+            <button key={n.id} onClick={() => !n.read && onMarkRead(n.id)} className={`${GLASS} w-full text-left rounded-2xl p-4 flex items-start gap-3 transition-all ${n.read ? 'opacity-60' : 'hover:bg-blue-50/40'}`}>
+              <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-slate-200' : 'bg-sky-500'}`} />
               <div className="flex-1 min-w-0">
                 <p className="text-slate-700 text-sm">{n.message}</p>
                 <p className="text-slate-400 text-xs mt-1">{timeAgo(n.createdAt)}</p>
@@ -1464,17 +1517,17 @@ function TeacherHRFormModal({ editing, branches, onSubmit, onClose }) {
   return (
     <Modal title={editing ? "O'qituvchini tahrirlash" : "O'qituvchi qo'shish"} onClose={onClose}>
       <div className="space-y-4">
-        <div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{branches.map(b => <option key={b.id} value={b.id} className="bg-violet-950">{b.name}</option>)}</select></div>
+        <div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
         <div><label className={LABEL_CLS}>Ism familiya</label><input value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} autoFocus /></div>
         <div><label className={LABEL_CLS}>Telefon raqam</label><PhoneInput value={phone} onChange={setPhone} /></div>
         <div>
           <label className={LABEL_CLS}>Kelishuv turi</label>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => setSalaryType('percent')} className={`text-left rounded-xl border p-3 transition-all ${salaryType === 'percent' ? 'bg-slate-100 border-slate-200' : 'bg-slate-50 border-slate-200'}`}>
+            <button type="button" onClick={() => setSalaryType('percent')} className={`text-left rounded-xl border p-3 transition-all ${salaryType === 'percent' ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
               <p className="text-slate-900 text-sm font-medium">To'lovdan foiz</p>
               <p className="text-slate-400 text-[11px] mt-0.5">o'quvchi to'lovidan ulush</p>
             </button>
-            <button type="button" onClick={() => setSalaryType('fixed')} className={`text-left rounded-xl border p-3 transition-all ${salaryType === 'fixed' ? 'bg-slate-100 border-slate-200' : 'bg-slate-50 border-slate-200'}`}>
+            <button type="button" onClick={() => setSalaryType('fixed')} className={`text-left rounded-xl border p-3 transition-all ${salaryType === 'fixed' ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
               <p className="text-slate-900 text-sm font-medium">Belgilangan oylik</p>
               <p className="text-slate-400 text-[11px] mt-0.5">to'lovga bog'liq emas</p>
             </button>
@@ -1490,7 +1543,7 @@ function TeacherHRFormModal({ editing, branches, onSubmit, onClose }) {
           <ToggleSwitch checked={canCreateGroups} onChange={setCanCreateGroups} label="Guruh ochishga ruxsat" sub="O'chirilsa, ustoz ilovasida 'Yangi guruh' tugmasi yashiriladi" />
           <ToggleSwitch checked={canReceivePayments} onChange={setCanReceivePayments} label="To'lov qabul qilishga ruxsat" sub="O'quvchilardan to'lov olish huquqi" />
         </div>
-        {error && <p className="text-rose-300 text-xs">{error}</p>}
+        {error && <p className="text-rose-500 text-xs">{error}</p>}
         <PrimaryButton onClick={submit} className="w-full">{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Saqlash' : "Qo'shish"}</PrimaryButton>
       </div>
     </Modal>
@@ -1518,27 +1571,27 @@ function TeacherPayrollModal({ teacher, branch, directorData, opData, onAddPayme
     <Modal title={`${teacher.name} — maosh hisob-kitobi`} onClose={onClose}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs bg-slate-50 px-2.5 py-1 rounded-full text-slate-600">{teacher.salaryType === 'fixed' ? 'Belgilangan oylik' : `Foizli ${teacher.revenueSharePercent || 0}%`}</span>
+          <span className="text-xs bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-full text-blue-700">{teacher.salaryType === 'fixed' ? 'Belgilangan oylik' : `Foizli ${teacher.revenueSharePercent || 0}%`}</span>
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} className={`${INPUT_CLS} w-auto py-1.5 text-xs`} />
         </div>
 
         <div className={`${GLASS_SOFT} rounded-2xl p-4 grid grid-cols-2 gap-3 text-sm`}>
           <div><p className="text-slate-400 text-[11px]">Oylik haqi</p><p className="text-slate-900 font-semibold">{money(stats.expectedPay)} so'm</p></div>
-          <div><p className="text-slate-400 text-[11px]">Avans olgan</p><p className="text-amber-300 font-semibold">{money(stats.advances)} so'm</p></div>
-          <div><p className="text-slate-400 text-[11px]">Maosh olgan</p><p className="text-sky-300 font-semibold">{money(stats.salaryPaid)} so'm</p></div>
-          <div><p className="text-slate-400 text-[11px]">Qolgan haqi</p><p className="text-emerald-300 font-semibold">{money(stats.remaining)} so'm</p></div>
+          <div><p className="text-slate-400 text-[11px]">Avans olgan</p><p className="text-amber-600 font-semibold">{money(stats.advances)} so'm</p></div>
+          <div><p className="text-slate-400 text-[11px]">Maosh olgan</p><p className="text-sky-600 font-semibold">{money(stats.salaryPaid)} so'm</p></div>
+          <div><p className="text-slate-400 text-[11px]">Qolgan haqi</p><p className="text-emerald-600 font-semibold">{money(stats.remaining)} so'm</p></div>
         </div>
 
         <div className="space-y-3">
           <div className="flex gap-1.5 bg-slate-50 border border-slate-200 rounded-xl p-1">
-            <button onClick={() => setTab('advance')} className={`flex-1 text-xs py-2 rounded-lg transition-all ${tab === 'advance' ? 'bg-amber-400/30 text-amber-700' : 'text-slate-500'}`}>Avans berish</button>
-            <button onClick={() => setTab('salary')} className={`flex-1 text-xs py-2 rounded-lg transition-all ${tab === 'salary' ? 'bg-sky-400/30 text-sky-700' : 'text-slate-500'}`}>Maosh to'lash</button>
+            <button onClick={() => setTab('advance')} className={`flex-1 text-xs py-2 rounded-lg transition-all ${tab === 'advance' ? 'bg-amber-100 text-amber-700' : 'text-slate-500'}`}>Avans berish</button>
+            <button onClick={() => setTab('salary')} className={`flex-1 text-xs py-2 rounded-lg transition-all ${tab === 'salary' ? 'bg-sky-100 text-sky-700' : 'text-slate-500'}`}>Maosh to'lash</button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <input type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Summa" className={INPUT_CLS} />
             <input value={note} onChange={e => setNote(e.target.value)} placeholder="Izoh (ixtiyoriy)" className={INPUT_CLS} />
           </div>
-          {error && <p className="text-rose-300 text-xs">{error}</p>}
+          {error && <p className="text-rose-500 text-xs">{error}</p>}
           <PrimaryButton onClick={submitPayment} className="w-full"><Plus size={16} /> {tab === 'advance' ? 'Avans berish' : "Maosh to'lash"}</PrimaryButton>
         </div>
 
@@ -1548,7 +1601,7 @@ function TeacherPayrollModal({ teacher, branch, directorData, opData, onAddPayme
             {allHistory.map(p => (
               <div key={p.id} className="flex items-center justify-between text-xs bg-slate-50 rounded-lg px-3 py-2">
                 <div>
-                  <span className={p.type === 'advance' ? 'text-amber-300' : 'text-sky-300'}>{p.type === 'advance' ? 'Avans' : 'Maosh'}</span>
+                  <span className={p.type === 'advance' ? 'text-amber-600' : 'text-sky-600'}>{p.type === 'advance' ? 'Avans' : 'Maosh'}</span>
                   <span className="text-slate-400 ml-2">{formatDate(p.date)}{p.note ? ` · ${p.note}` : ''}</span>
                 </div>
                 <span className="text-slate-900 font-medium">{money(p.amount)} so'm</span>
@@ -1573,9 +1626,9 @@ function CourseFormModal({ editing, branches, onSubmit, onClose }) {
   return (
     <Modal title={editing ? 'Kursni tahrirlash' : 'Yangi kurs'} onClose={onClose}>
       <div className="space-y-4">
-        {branches.length > 1 && (<div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{branches.map(b => <option key={b.id} value={b.id} className="bg-violet-950">{b.name}</option>)}</select></div>)}
+        {branches.length > 1 && (<div><label className={LABEL_CLS}>Filial</label><select value={branchId} onChange={e => setBranchId(e.target.value)} className={INPUT_CLS}>{branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>)}
         <div><label className={LABEL_CLS}>Kurs nomi</label><input value={name} onChange={e => setName(e.target.value)} className={INPUT_CLS} placeholder="Masalan: Matematika" autoFocus /></div>
-        {error && <p className="text-rose-300 text-xs">{error}</p>}
+        {error && <p className="text-rose-500 text-xs">{error}</p>}
         <PrimaryButton onClick={submit} className="w-full">{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Saqlash' : "Qo'shish"}</PrimaryButton>
       </div>
     </Modal>
@@ -1608,7 +1661,7 @@ function GroupFormModal({ editing, initialCourseId, courses, groups, rooms, onSu
           <label className={LABEL_CLS}>Kurs</label>
           <select value={courseId} onChange={e => setCourseId(e.target.value)} className={INPUT_CLS} disabled={!!editing}>
             {courses.length === 0 && <option value="">— Avval kurs yarating —</option>}
-            {courses.map(c => <option key={c.id} value={c.id} className="bg-violet-950">{c.name}</option>)}
+            {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div><label className={LABEL_CLS}>Guruh nomi</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Masalan: Matematika - A guruh" className={INPUT_CLS} /></div>
@@ -1620,8 +1673,8 @@ function GroupFormModal({ editing, initialCourseId, courses, groups, rooms, onSu
           <div>
             <label className={LABEL_CLS}>Xona (ixtiyoriy)</label>
             <select value={roomId} onChange={e => setRoomId(e.target.value)} className={INPUT_CLS}>
-              <option value="" className="bg-violet-950">— Tanlanmagan —</option>
-              {rooms.map(r => <option key={r.id} value={r.id} className="bg-violet-950">{r.name} ({r.capacity} o'rin)</option>)}
+              <option value="">— Tanlanmagan —</option>
+              {rooms.map(r => <option key={r.id} value={r.id}>{r.name} ({r.capacity} o'rin)</option>)}
             </select>
           </div>
         )}
@@ -1633,10 +1686,10 @@ function GroupFormModal({ editing, initialCourseId, courses, groups, rooms, onSu
         <div>
           <label className={LABEL_CLS}>Rang</label>
           <div className="flex gap-2 flex-wrap">
-            {GROUP_COLORS.map(c => <button key={c} type="button" onClick={() => setColor(c)} className={`w-7 h-7 rounded-full border-2 ${color === c ? 'border-white scale-110' : 'border-slate-200'}`} style={{ background: c }} />)}
+            {GROUP_COLORS.map(c => <button key={c} type="button" onClick={() => setColor(c)} className={`w-7 h-7 rounded-full border-2 ${color === c ? 'border-slate-900 scale-110' : 'border-slate-200'}`} style={{ background: c }} />)}
           </div>
         </div>
-        {error && <p className="text-rose-300 text-xs">{error}</p>}
+        {error && <p className="text-rose-500 text-xs">{error}</p>}
         <PrimaryButton onClick={submit} className="w-full" disabled={!courseId}>{editing ? <Check size={16} /> : <Plus size={16} />} {editing ? 'Saqlash' : 'Guruh yaratish'}</PrimaryButton>
       </div>
     </Modal>
@@ -1873,7 +1926,7 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={activeTheme}>
-      <div className="min-h-screen w-full text-slate-900 relative" style={{ background: '#fbfcfd', fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
+      <div className="min-h-screen w-full text-slate-900 relative" style={{ ...PAGE_BG_STYLE, fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>
         <GlobalStyleTag />
         <BackgroundBlobs />
         <div className="relative z-10 flex min-h-screen">
